@@ -35,7 +35,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     const cream = Color(0xFFFAF7F0);
-    const lightGreen = Color(0xFFE8EDDF);
     const sageGreen = Color(0xFF9AAA83);
     const darkGreen = Color(0xFF52634A);
     const brown = Color(0xFF795548);
@@ -54,42 +53,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
             children: [
               const SizedBox(height: 8),
 
-              // Cute KopiFinder Logo
+              // KopiFinder Logo
               Center(
-                child: Container(
-                  width: 95,
-                  height: 95,
-                  decoration: BoxDecoration(
-                    color: lightGreen,
-                    borderRadius: BorderRadius.circular(32),
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      const Icon(
-                        Icons.coffee_rounded,
-                        color: darkBrown,
-                        size: 53,
-                      ),
-                      Positioned(
-                        top: 9,
-                        right: 11,
-                        child: Icon(
-                          Icons.auto_awesome,
-                          color: sageGreen.withOpacity(0.9),
-                          size: 20,
-                        ),
-                      ),
-                      const Positioned(
-                        bottom: 10,
-                        left: 12,
-                        child: Icon(
-                          Icons.favorite_rounded,
-                          color: brown,
-                          size: 16,
-                        ),
-                      ),
-                    ],
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(28),
+                  child: Image.asset(
+                    'assets/icons/app_icon.jpeg',
+                    width: 90,
+                    height: 90,
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),

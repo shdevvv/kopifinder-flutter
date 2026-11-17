@@ -37,7 +37,6 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     const cream = Color(0xFFFAF7F0);
-    const lightGreen = Color(0xFFE8EDDF);
     const sageGreen = Color(0xFF9AAA83);
     const darkGreen = Color(0xFF52634A);
     const brown = Color(0xFF795548);
@@ -57,42 +56,15 @@ class _SignInScreenState extends State<SignInScreen> {
               children: [
                 const SizedBox(height: 10),
 
-                // Cute KopiFinder Logo
+                // KopiFinder Logo
                 Center(
-                  child: Container(
-                    width: 105,
-                    height: 105,
-                    decoration: BoxDecoration(
-                      color: lightGreen,
-                      borderRadius: BorderRadius.circular(35),
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        const Icon(
-                          Icons.coffee_rounded,
-                          color: darkBrown,
-                          size: 58,
-                        ),
-                        Positioned(
-                          top: 10,
-                          right: 12,
-                          child: Icon(
-                            Icons.auto_awesome,
-                            color: sageGreen.withOpacity(0.9),
-                            size: 21,
-                          ),
-                        ),
-                        const Positioned(
-                          bottom: 12,
-                          left: 13,
-                          child: Icon(
-                            Icons.favorite_rounded,
-                            color: brown,
-                            size: 17,
-                          ),
-                        ),
-                      ],
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: Image.asset(
+                      'assets/icons/app_icon.jpeg',
+                      width: 95,
+                      height: 95,
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
