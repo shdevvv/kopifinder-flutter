@@ -22,7 +22,9 @@ export const errorHandler = (
 ): void => {
   const statusCode = err instanceof AppError ? err.statusCode : 500;
   const code = err instanceof AppError ? err.code : 'INTERNAL_SERVER_ERROR';
-  const message = err.message || 'An unexpected error occurred';
+  const message = err instanceof AppError ? err.message : 'An unexpected error occurred';
+
+  if (statusCode >= 500) console.error(`[${req.requestId ?? 'no-request-id'}]`, err);
 
   // Do not expose stack traces or raw SQL errors to clients
   res.status(statusCode).json({
@@ -30,7 +32,7 @@ export const errorHandler = (
     error: {
       code,
       message,
-      ...(config.env === 'development' && { details: err.stack }),
     },
+    meta: { request_id: req.requestId },
   });
 };

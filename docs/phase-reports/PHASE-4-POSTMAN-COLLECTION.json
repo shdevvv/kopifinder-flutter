@@ -1,0 +1,68 @@
+{
+  "info": {
+    "name": "KopiFinder Phase 4 API",
+    "description": "Requests for Phase 4. Configure base_url, access_token, and fixture IDs in a private Postman environment. Run writes only against a development Supabase project.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000/api/v1" },
+    { "key": "access_token", "value": "" },
+    { "key": "cafe_id", "value": "" },
+    { "key": "place_id", "value": "" },
+    { "key": "post_id", "value": "" },
+    { "key": "comment_id", "value": "" },
+    { "key": "review_id", "value": "" },
+    { "key": "current_password", "value": "" }
+  ],
+  "item": [
+    { "name": "Health", "item": [
+      { "name": "Liveness", "request": { "method": "GET", "url": "{{base_url}}/health" } },
+      { "name": "Readiness", "request": { "method": "GET", "url": "{{base_url}}/health/ready" } }
+    ]},
+    { "name": "Users", "item": [
+      { "name": "Get my profile", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}], "url": "{{base_url}}/users/me" } },
+      { "name": "Update my profile", "request": { "method": "PATCH", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"},{"key":"Content-Type","value":"application/json"}], "body": {"mode":"raw","raw":"{\"name\":\"Kopi User\",\"location\":\"Jakarta\"}","options":{"raw":{"language":"json"}}}, "url": "{{base_url}}/users/me" } },
+      { "name": "My stats", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}], "url": "{{base_url}}/users/me/stats" } },
+      { "name": "My activity", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}], "url": "{{base_url}}/users/me/activity?page=1&limit=10" } },
+      { "name": "Check username", "request": { "method": "GET", "url": "{{base_url}}/users/check-username?username=kopi_user" } },
+      { "name": "Password reset", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}], "url": "{{base_url}}/users/me/password-reset" } },
+      { "name": "Delete my account", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"},{"key":"Content-Type","value":"application/json"}], "body": {"mode":"raw","raw":"{\"password\":\"{{current_password}}\"}","options":{"raw":{"language":"json"}}}, "url": "{{base_url}}/users/me" } }
+    ]},
+    { "name": "Places and cafes", "item": [
+      { "name": "List places", "request": { "method": "GET", "url": "{{base_url}}/places?q=coffee&area=Jaksel&limit=20&page=1" } },
+      { "name": "Place detail", "request": { "method": "GET", "url": "{{base_url}}/places/{{place_id}}" } },
+      { "name": "List cafes", "request": { "method": "GET", "url": "{{base_url}}/cafes?q=coffee&area=Jaksel&sort=rating&limit=20&page=1" } },
+      { "name": "Cafe detail", "request": { "method": "GET", "url": "{{base_url}}/cafes/{{cafe_id}}" } },
+      { "name": "Cafe reviews", "request": { "method": "GET", "url": "{{base_url}}/cafes/{{cafe_id}}/reviews?page=1&limit=20" } },
+      { "name": "Create review", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"},{"key":"Content-Type","value":"application/json"}], "body": {"mode":"raw","raw":"{\"rating\":5,\"text\":\"Tempat nyaman.\",\"photo_url\":null}","options":{"raw":{"language":"json"}}}, "url": "{{base_url}}/cafes/{{cafe_id}}/reviews" } },
+      { "name": "Delete review", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}], "url": "{{base_url}}/reviews/{{review_id}}" } },
+      { "name": "Offers", "request": { "method": "GET", "url": "{{base_url}}/offers?page=1&limit=20" } }
+    ]},
+    { "name": "Saved cafes", "item": [
+      { "name": "List saved cafes", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}], "url": "{{base_url}}/saved-cafes?page=1&limit=20" } },
+      { "name": "Save cafe", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"},{"key":"Content-Type","value":"application/json"}], "body": {"mode":"raw","raw":"{\"cafe_id\":\"{{cafe_id}}\"}","options":{"raw":{"language":"json"}}}, "url": "{{base_url}}/saved-cafes" } },
+      { "name": "Unsave cafe", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}], "url": "{{base_url}}/saved-cafes/{{cafe_id}}" } }
+    ]},
+    { "name": "Community", "item": [
+      { "name": "Feed", "request": { "method": "GET", "url": "{{base_url}}/posts?page=1&limit=20" } },
+      { "name": "Create post", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"},{"key":"Content-Type","value":"application/json"}], "body": {"mode":"raw","raw":"{\"cafe_id\":\"{{cafe_id}}\",\"caption\":\"Ngopi sore.\",\"photo_path\":null}","options":{"raw":{"language":"json"}}}, "url": "{{base_url}}/posts" } },
+      { "name": "Delete post", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}], "url": "{{base_url}}/posts/{{post_id}}" } },
+      { "name": "Like post", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}], "url": "{{base_url}}/posts/{{post_id}}/like" } },
+      { "name": "Unlike post", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}], "url": "{{base_url}}/posts/{{post_id}}/like" } },
+      { "name": "Comments", "request": { "method": "GET", "url": "{{base_url}}/posts/{{post_id}}/comments?page=1&limit=20" } },
+      { "name": "Add comment", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"},{"key":"Content-Type","value":"application/json"}], "body": {"mode":"raw","raw":"{\"text\":\"Info bagus!\",\"parent_id\":null}","options":{"raw":{"language":"json"}}}, "url": "{{base_url}}/posts/{{post_id}}/comments" } },
+      { "name": "Delete comment", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}], "url": "{{base_url}}/comments/{{comment_id}}" } },
+      { "name": "Like comment", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}], "url": "{{base_url}}/comments/{{comment_id}}/like" } },
+      { "name": "Unlike comment", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}], "url": "{{base_url}}/comments/{{comment_id}}/like" } }
+    ]},
+    { "name": "AI", "item": [
+      { "name": "Recommend", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"},{"key":"Content-Type","value":"application/json"}], "body": {"mode":"raw","raw":"{\"purpose\":\"Study\",\"budget\":\"30k-60k\",\"details\":\"Perlu WiFi\"}","options":{"raw":{"language":"json"}}}, "url": "{{base_url}}/ai/recommend" } },
+      { "name": "AI history", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}], "url": "{{base_url}}/ai/history?page=1&limit=20" } }
+    ]},
+    { "name": "Sync admin", "item": [
+      { "name": "Sync status", "request": { "method": "GET", "url": "{{base_url}}/sync/status" } },
+      { "name": "Sync logs", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}], "url": "{{base_url}}/sync/logs?page=1&limit=20" } },
+      { "name": "Trigger dry run", "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"},{"key":"Content-Type","value":"application/json"}], "body": {"mode":"raw","raw":"{\"area\":\"Jaksel\",\"dry_run\":true}","options":{"raw":{"language":"json"}}}, "url": "{{base_url}}/sync/trigger" } }
+    ]}
+  ]
+}

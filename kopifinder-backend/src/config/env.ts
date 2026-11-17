@@ -14,8 +14,9 @@ export const config = {
   },
   gemini: {
     apiKey: process.env.GEMINI_API_KEY || '',
-    model: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
+    model: process.env.GEMINI_MODEL || 'gemini-3.8-flash',
   },
-  corsOrigins: (process.env.CORS_ORIGINS || '*').split(',').map((origin) => origin.trim()),
+  corsOrigins: (process.env.CORS_ORIGINS || '').split(',').map((origin) => origin.trim()).filter(Boolean),
   adminUserIds: (process.env.ADMIN_USER_IDS || '').split(',').map((id) => id.trim()).filter(Boolean),
+  aiRateLimitPerHour: parseInt(process.env.AI_RATE_LIMIT_PER_HOUR || '10', 10),
 };

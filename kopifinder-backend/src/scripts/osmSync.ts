@@ -18,6 +18,7 @@ import { startSyncRun, finishSyncRun } from './osmReport';
 
 const ALL_AREAS: OsmArea[] = ['Jaksel', 'Jakpus', 'Jakbar', 'Jaktim', 'Jakut'];
 const INTER_AREA_DELAY_MS = 3_000; // 3 second pause between area queries (Overpass courtesy)
+const DRY_RUN = process.argv.includes('--dry-run');
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -38,7 +39,7 @@ interface AreaSyncResult {
 /** Sync a single area end-to-end */
 async function syncArea(area: OsmArea): Promise<AreaSyncResult> {
   const startedAt = new Date();
-  const run = await startSyncRun(area);
+  const run = DRY_RUN ? null : await startSyncRun(area);
 
   const result: AreaSyncResult = {
     area,
@@ -61,6 +62,12 @@ async function syncArea(area: OsmArea): Promise<AreaSyncResult> {
     const rows = transformElements(elements, area);
     result.transformed = rows.length;
     console.log(`[Sync] ${area}: ${result.found} raw → ${result.transformed} valid places`);
+
+    if (DRY_RUN) {
+      result.status = 'success';
+      result.durationMs = Date.now() - startedAt.getTime();
+      return result;
+    }
 
     if (rows.length === 0) {
       result.status = 'partial';

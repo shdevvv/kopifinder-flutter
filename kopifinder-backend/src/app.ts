@@ -3,9 +3,12 @@ import { helmetMiddleware, corsMiddleware } from './middleware/security';
 import { apiRateLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
 import apiRouter from './routes';
+import { requestId } from './middleware/requestId';
 
 export const createApp = (): Express => {
   const app = express();
+
+  app.use(requestId);
 
   // Security & Header Middleware
   app.use(helmetMiddleware);
@@ -29,6 +32,7 @@ export const createApp = (): Express => {
         code: 'NOT_FOUND',
         message: `Route ${req.method} ${req.path} not found`,
       },
+      meta: { request_id: req.requestId },
     });
   });
 
