@@ -37,17 +37,14 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Gambar logo KopiFinder (sama dengan icon native cold start)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: Image.asset(
-                'assets/icons/app_icon.jpeg',
-                width: 120,
-                height: 120,
-                fit: BoxFit.cover,
-              ),
+            // Tampilkan artwork logo utuh tanpa membungkusnya dengan bentuk lain.
+            Image.asset(
+              'assets/icons/app_icon.jpeg',
+              width: 220,
+              height: 220,
+              fit: BoxFit.contain,
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 28),
             // Loading indicator di bawah logo
             const SizedBox(
               width: 28,
