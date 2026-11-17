@@ -2,56 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
-// ==========================================
-// MODEL DATA
-// ==========================================
-
-class CommunityReply {
-  final String name;
-  final String text;
-
-  CommunityReply({
-    required this.name,
-    required this.text,
-  });
-}
-
-class CommunityComment {
-  final String name;
-  final String text;
-  int likes;
-  bool liked;
-  final List<CommunityReply> replies;
-
-  CommunityComment({
-    required this.name,
-    required this.text,
-    this.likes = 0,
-    this.liked = false,
-    List<CommunityReply>? replies,
-  }) : replies = replies ?? [];
-}
-
-class CommunityPost {
-  final String name;
-  final String location;
-  final String caption;
-  final File? image;
-  int likes;
-  bool liked;
-  final List<CommunityComment> comments;
-
-  CommunityPost({
-    required this.name,
-    required this.location,
-    required this.caption,
-    this.image,
-    this.likes = 0,
-    this.liked = false,
-    List<CommunityComment>? comments,
-  }) : comments = comments ?? [];
-}
+import '../../../core/widgets/state_widgets.dart';
+import '../models/community_models.dart';
+import '../repositories/community_repository.dart';
 
 // ==========================================
 // COMMUNITY SCREEN
@@ -72,52 +25,55 @@ class _CommunityScreenState extends State<CommunityScreen> {
   static const brown = Color(0xFF795548);
   static const darkBrown = Color(0xFF4E342E);
 
-  final List<CommunityPost> posts = [
-    CommunityPost(
-      name: 'Coffee Explorer',
-      location: 'Jakarta',
-      caption: 'Menemukan tempat ngopi yang nyaman untuk kerja hari ini!',
-      likes: 24,
-      comments: [
-        CommunityComment(
-          name: 'Coffee Lover',
-          text: 'Tempatnya di mana?',
-          likes: 2,
-          replies: [
-            CommunityReply(
-              name: 'Coffee Explorer',
-              text: 'Di daerah Jakarta Selatan!',
-            ),
-          ],
-        ),
-      ],
-    ),
-    CommunityPost(
-      name: 'Daily Coffee',
-      location: 'Bandung',
-      caption: 'Weekend paling pas ditemani secangkir kopi ☕',
-      likes: 18,
-    ),
-    CommunityPost(
-      name: 'Cafe Hunter',
-      location: 'Yogyakarta',
-      caption: 'Suasana cafe yang bikin betah berlama-lama.',
-      likes: 32,
-      comments: [
-        CommunityComment(
-          name: 'Coffee Lover',
-          text: 'Vibes-nya bagus banget!',
-          likes: 1,
-        ),
-      ],
-    ),
-  ];
+  List<CommunityPost> posts = [];
+  bool _isLoading = true;
+  String? _errorMessage;
 
-  void togglePostLike(CommunityPost post) {
+  @override
+  void initState() {
+    super.initState();
+    _loadPosts();
+  }
+
+  Future<void> _loadPosts() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final list = await CommunityRepository.instance.getPosts();
+      if (mounted) {
+        setState(() {
+          posts = list;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void togglePostLike(CommunityPost post) async {
+    final prevLiked = post.liked;
     setState(() {
       post.liked = !post.liked;
       post.likes += post.liked ? 1 : -1;
     });
+
+    if (post.id != null) {
+      final newStatus = await CommunityRepository.instance.toggleLike(post.id!, prevLiked);
+      if (mounted && post.liked != newStatus) {
+        setState(() {
+          post.liked = newStatus;
+        });
+      }
+    }
   }
 
   void toggleCommentLike(CommunityComment comment) {
@@ -142,6 +98,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
     setState(() {
       posts.insert(0, result);
     });
+
+    // Also persist via repository
+    try {
+      await CommunityRepository.instance.createPost(
+        caption: result.caption,
+      );
+    } catch (_) {}
   }
 
   Future<void> openComments(CommunityPost post) async {
@@ -188,9 +151,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
               children: [
                 CircleAvatar(
                   backgroundColor: lightGreen,
-                  child: const Icon(
-                    Icons.person_rounded,
-                    color: darkGreen,
+                  child: Text(
+                    post.name.isNotEmpty ? post.name[0].toUpperCase() : 'C',
+                    style: const TextStyle(
+                      color: darkGreen,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 11),
@@ -311,85 +277,114 @@ class _CommunityScreenState extends State<CommunityScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: lightGreen,
-              borderRadius: BorderRadius.circular(22),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 55,
-                  height: 55,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(18),
+      body: RefreshIndicator(
+        color: darkGreen,
+        backgroundColor: cream,
+        onRefresh: _loadPosts,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          children: [
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: lightGreen,
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 55,
+                    height: 55,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Icon(
+                      Icons.coffee_rounded,
+                      color: darkGreen,
+                      size: 31,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.coffee_rounded,
-                    color: darkGreen,
-                    size: 31,
+                  const SizedBox(width: 13),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Coffee Community ☕',
+                          style: TextStyle(
+                            color: darkBrown,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        SizedBox(height: 5),
+                        Text(
+                          'Bagikan cerita dan temukan teman ngopi!',
+                          style: TextStyle(
+                            color: darkGreen,
+                            fontSize: 12,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 22),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Postingan Terbaru',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: darkBrown,
                   ),
                 ),
-                const SizedBox(width: 13),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Coffee Community ☕',
-                        style: TextStyle(
-                          color: darkBrown,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      SizedBox(height: 5),
-                      Text(
-                        'Bagikan cerita dan temukan teman ngopi!',
-                        style: TextStyle(
-                          color: darkGreen,
-                          fontSize: 12,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
+                TextButton(
+                  onPressed: openCreatePost,
+                  child: const Text(
+                    'Buat Post',
+                    style: TextStyle(
+                      color: darkGreen,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 22),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Postingan Terbaru',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: darkBrown,
+            const SizedBox(height: 8),
+            if (_isLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 40),
+                child: AppLoadingWidget(message: 'Memuat postingan komunitas...'),
+              )
+            else if (_errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: AppErrorWidget(
+                  message: _errorMessage!,
+                  onRetry: _loadPosts,
                 ),
-              ),
-              TextButton(
-                onPressed: openCreatePost,
-                child: const Text(
-                  'Buat Post',
-                  style: TextStyle(
-                    color: darkGreen,
-                    fontWeight: FontWeight.bold,
-                  ),
+              )
+            else if (posts.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 30),
+                child: AppEmptyWidget(
+                  icon: Icons.forum_outlined,
+                  title: 'Belum Ada Postingan',
+                  description: 'Jadilah yang pertama membagikan cerita kopi Anda!',
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          ...posts.map(buildPostCard),
-        ],
+              )
+            else
+              ...posts.map(buildPostCard),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: openCreatePost,
@@ -418,14 +413,12 @@ class CreatePostSheet extends StatefulWidget {
 
 class _CreatePostSheetState extends State<CreatePostSheet> {
   final TextEditingController captionController = TextEditingController();
-
   final ImagePicker picker = ImagePicker();
 
   File? selectedImage;
   bool pickingImage = false;
 
   static const cream = Color(0xFFFAF7F0);
-  static const lightGreen = Color(0xFFE8EDDF);
   static const sage = Color(0xFF9AAA83);
   static const darkGreen = Color(0xFF52634A);
   static const brown = Color(0xFF795548);
@@ -484,7 +477,7 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
 
     final post = CommunityPost(
       name: 'You',
-      location: 'Lokasi saya',
+      location: 'Senopati, Jakarta',
       caption: caption,
       image: selectedImage,
     );
@@ -685,6 +678,15 @@ class _CommentsSheetState extends State<CommentsSheet> {
       replyingTo = null;
       commentController.clear();
     });
+
+    // Also persist via repository
+    if (widget.post.id != null) {
+      CommunityRepository.instance.addComment(
+        postId: widget.post.id!,
+        text: text,
+        parentCommentId: replyingTo?.id,
+      );
+    }
   }
 
   @override

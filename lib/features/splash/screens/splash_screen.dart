@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:kopifinder/features/auth/screens/sign_in_screen.dart';
+import '../../../app/navigation/main_navigation.dart';
+import '../../auth/repositories/auth_repository.dart';
+import '../../auth/screens/sign_in_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -12,19 +14,23 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _goToSignIn();
+    _checkSessionAndNavigate();
   }
 
-  Future<void> _goToSignIn() async {
-    // Memberikan jeda loading sebelum masuk ke halaman Sign In
+  Future<void> _checkSessionAndNavigate() async {
     await Future.delayed(const Duration(seconds: 2));
 
     if (!mounted) return;
 
+    final isAuthenticated = AuthRepository.instance.isAuthenticated;
+    final targetScreen = isAuthenticated
+        ? const MainNavigation()
+        : const SignInScreen();
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => const SignInScreen(),
+        builder: (context) => targetScreen,
       ),
     );
   }
@@ -37,7 +43,6 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Tampilkan artwork logo utuh tanpa membungkusnya dengan bentuk lain.
             Image.asset(
               'assets/icons/app_icon.jpeg',
               width: 220,
@@ -45,13 +50,12 @@ class _SplashScreenState extends State<SplashScreen> {
               fit: BoxFit.contain,
             ),
             const SizedBox(height: 28),
-            // Loading indicator di bawah logo
             const SizedBox(
               width: 28,
               height: 28,
               child: CircularProgressIndicator(
                 strokeWidth: 2.5,
-                color: Color(0xFF795548), // Warna cokelat kopi
+                color: Color(0xFF795548),
               ),
             ),
           ],

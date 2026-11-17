@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/state_widgets.dart';
+import '../models/ai_recommendation_models.dart';
+import '../repositories/ai_repository.dart';
 
 const Color cream = Color(0xFFFAF7F0);
 const Color espresso = Color(0xFF49372D);
@@ -30,12 +33,10 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen> {
   final TextEditingController _detailsController = TextEditingController();
 
   bool showResults = false;
+  bool _isLoading = false;
+  String? _errorMessage;
 
-  final List<Map<String, dynamic>> recommendations = [
-    {'name': 'First Coffee', 'match': 98},
-    {'name': 'Daily Brew', 'match': 94},
-    {'name': 'The Coffee Room', 'match': 89},
-  ];
+  List<AiCafeRecommendation> recommendations = [];
 
   @override
   void dispose() {
@@ -106,7 +107,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen> {
               Text(
                 subtitle,
                 style: const TextStyle(
-                  fontSize: 11,
+                  fontSize: 12,
                   color: mutedText,
                 ),
               ),
@@ -120,46 +121,39 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen> {
   Widget _buildFilter({
     required List<String> options,
     required String? selectedValue,
-    required Function(String) onSelected,
+    required ValueChanged<String> onSelected,
   }) {
     return Wrap(
       spacing: 9,
-      runSpacing: 11,
+      runSpacing: 10,
       children: options.map((option) {
         final isSelected = selectedValue == option;
-
-        return GestureDetector(
+        return InkWell(
+          borderRadius: BorderRadius.circular(20),
           onTap: () {
-            setState(() {
-              onSelected(isSelected ? '' : option);
-              showResults = false;
-            });
+            onSelected(isSelected ? '' : option);
+            setState(() {});
           },
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
+            duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(
               horizontal: 16,
-              vertical: 11,
+              vertical: 10,
             ),
             decoration: BoxDecoration(
-              color: isSelected ? olive : cream,
-              borderRadius: BorderRadius.circular(15),
+              color: isSelected ? olive : Colors.white,
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isSelected ? olive : const Color(0xFFE3DED3),
+                color: isSelected ? olive : const Color(0xFFE0D8CB),
+                width: 1.2,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: espresso.withOpacity(0.07),
-                  offset: const Offset(0, 3),
-                ),
-              ],
             ),
             child: Text(
               option,
               style: TextStyle(
                 color: isSelected ? Colors.white : espresso,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
               ),
             ),
           ),
@@ -168,34 +162,58 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen> {
     );
   }
 
-  Widget _buildRecommendationCard(
-    Map<String, dynamic> cafe,
-  ) {
+  Future<void> _fetchRecommendations() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      showResults = true;
+    });
+
+    try {
+      final recs = await AiRepository.instance.getRecommendations(
+        purpose: selectedPurpose ?? 'Work',
+        budget: selectedPrice ?? 'medium',
+        details: _detailsController.text.trim(),
+      );
+
+      if (mounted) {
+        setState(() {
+          recommendations = recs;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Widget _buildRecommendationCard(AiCafeRecommendation cafe) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 17),
-      padding: const EdgeInsets.all(15),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(17),
       decoration: softCardDecoration,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 88,
-                height: 88,
+                width: 68,
+                height: 68,
                 decoration: BoxDecoration(
                   color: lightSage,
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: olive.withOpacity(0.18),
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
                 child: const Icon(
                   Icons.local_cafe_rounded,
                   color: olive,
-                  size: 42,
+                  size: 32,
                 ),
               ),
               const SizedBox(width: 15),
@@ -222,7 +240,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen> {
                           ),
                           const SizedBox(width: 5),
                           Text(
-                            '${cafe['match']}% Match',
+                            '${cafe.matchScore}% Match',
                             style: const TextStyle(
                               color: darkCaramel,
                               fontSize: 11,
@@ -234,7 +252,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      cafe['name'],
+                      cafe.name,
                       style: const TextStyle(
                         color: espresso,
                         fontSize: 16,
@@ -242,11 +260,12 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen> {
                       ),
                     ),
                     const SizedBox(height: 5),
-                    const Text(
-                      'A cozy coffee spot for you',
-                      style: TextStyle(
+                    Text(
+                      cafe.reason ?? 'Pilihan kafe yang pas untuk kebutuhan ngopi Anda.',
+                      style: const TextStyle(
                         color: mutedText,
-                        fontSize: 11,
+                        fontSize: 12,
+                        height: 1.4,
                       ),
                     ),
                   ],
@@ -254,6 +273,30 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen> {
               ),
             ],
           ),
+          if (cafe.highlights.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: cafe.highlights.map((h) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: lightSage,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    h,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: olive,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
           const SizedBox(height: 17),
           SizedBox(
             width: double.infinity,
@@ -518,11 +561,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen> {
                 width: double.infinity,
                 height: 57,
                 child: ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      showResults = true;
-                    });
-                  },
+                  onPressed: _isLoading ? null : _fetchRecommendations,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: olive,
                     foregroundColor: Colors.white,
@@ -531,28 +570,37 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen> {
                       borderRadius: BorderRadius.circular(18),
                     ),
                   ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.auto_awesome_rounded,
-                        size: 20,
-                      ),
-                      SizedBox(width: 10),
-                      Text(
-                        'Find My Cafe',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.auto_awesome_rounded,
+                              size: 20,
+                            ),
+                            SizedBox(width: 10),
+                            Text(
+                              'Find My Cafe',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 18,
+                            ),
+                          ],
                         ),
-                      ),
-                      SizedBox(width: 8),
-                      Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 18,
-                      ),
-                    ],
-                  ),
                 ),
               ),
               if (showResults) ...[
@@ -574,9 +622,32 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen> {
                   ),
                 ),
                 const SizedBox(height: 19),
-                ...recommendations.map(
-                  (cafe) => _buildRecommendationCard(cafe),
-                ),
+                if (_isLoading)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 30),
+                    child: AppLoadingWidget(message: 'Meracik rekomendasi dengan AI...'),
+                  )
+                else if (_errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: AppErrorWidget(
+                      message: _errorMessage!,
+                      onRetry: _fetchRecommendations,
+                    ),
+                  )
+                else if (recommendations.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: AppEmptyWidget(
+                      icon: Icons.search_off_rounded,
+                      title: 'Tidak Ada Rekomendasi',
+                      description: 'Coba ubah preferensi atau budget untuk hasil lainnya.',
+                    ),
+                  )
+                else
+                  ...recommendations.map(
+                    (cafe) => _buildRecommendationCard(cafe),
+                  ),
               ],
             ],
           ),

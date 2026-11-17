@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../auth/repositories/auth_repository.dart';
+import '../../auth/screens/sign_in_screen.dart';
+import '../models/user_profile.dart';
+import '../repositories/user_repository.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -18,10 +22,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String userName = 'Coffee Lover';
   String username = '@coffeelover';
   String location = 'Jakarta, Indonesia';
+  UserStats _stats = const UserStats();
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final results = await Future.wait([
+        UserRepository.instance.getProfile(),
+        UserRepository.instance.getStats(),
+      ]);
+
+      final profile = results[0] as UserProfile;
+      final stats = results[1] as UserStats;
+
+      if (mounted) {
+        setState(() {
+          userName = profile.fullName;
+          username = profile.username.startsWith('@') ? profile.username : '@${profile.username}';
+          location = profile.location;
+          _stats = stats;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   void editProfile() {
     final nameController = TextEditingController(text: userName);
-    final usernameController = TextEditingController(text: username);
+    final usernameController = TextEditingController(
+      text: username.startsWith('@') ? username.substring(1) : username,
+    );
     final locationController = TextEditingController(text: location);
 
     showDialog(
@@ -91,14 +131,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              onPressed: () {
-                setState(() {
-                  userName = nameController.text.trim();
-                  username = usernameController.text.trim();
-                  location = locationController.text.trim();
-                });
+              onPressed: () async {
+                final newName = nameController.text.trim();
+                final newUsername = usernameController.text.trim();
+                final newLocation = locationController.text.trim();
 
                 Navigator.pop(dialogContext);
+
+                setState(() {
+                  userName = newName;
+                  username = '@$newUsername';
+                  location = newLocation;
+                });
+
+                try {
+                  await UserRepository.instance.updateProfile(
+                    fullName: newName,
+                    username: newUsername,
+                    location: newLocation,
+                  );
+                } catch (_) {}
               },
               child: const Text('Simpan'),
             ),
@@ -166,7 +218,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           content: const Text(
-            'Apakah kamu yakin ingin keluar?',
+            'Apakah kamu yakin ingin keluar dari akun KopiFinder?',
             style: TextStyle(
               color: brown,
               height: 1.5,
@@ -183,15 +235,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(dialogContext);
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Fitur Log Out belum terhubung.',
-                    ),
-                  ),
+                await AuthRepository.instance.signOut();
+                if (!mounted) return;
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SignInScreen()),
+                  (route) => false,
                 );
               },
               child: const Text(
@@ -310,7 +361,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
 
-              const SizedBox(height: 35),
+              const SizedBox(height: 25),
+
+              // STATS ROW
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildStatItem('Ulasan', _stats.reviewsCount),
+                  Container(width: 1, height: 35, color: const Color(0xFFDCE4D3)),
+                  _buildStatItem('Disimpan', _stats.bookmarksCount),
+                  Container(width: 1, height: 35, color: const Color(0xFFDCE4D3)),
+                  _buildStatItem('Postingan', _stats.postsCount),
+                ],
+              ),
+
+              const SizedBox(height: 30),
 
               // EDIT PROFILE
               SizedBox(
@@ -375,6 +440,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildStatItem(String label, int count) {
+    return Column(
+      children: [
+        Text(
+          count.toString(),
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: darkBrown,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: brown,
+          ),
+        ),
+      ],
     );
   }
 }

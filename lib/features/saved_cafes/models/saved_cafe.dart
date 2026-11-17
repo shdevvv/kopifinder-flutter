@@ -1,21 +1,66 @@
 import 'package:flutter/foundation.dart';
+import '../../../core/network/api_client.dart';
 
 // ==========================================
 // SAVED CAFE MODEL
 // ==========================================
 
 class SavedCafe {
+  final String? id;
+  final String? cafeId;
   final String name;
   final String location;
+  final double rating;
+  final String? photoUrl;
 
   const SavedCafe({
+    this.id,
+    this.cafeId,
     required this.name,
     required this.location,
+    this.rating = 4.5,
+    this.photoUrl,
   });
+
+  factory SavedCafe.fromJson(Map<String, dynamic> json) {
+    double parseDouble(dynamic val) {
+      if (val == null) return 4.5;
+      if (val is num) return val.toDouble();
+      return double.tryParse(val.toString()) ?? 4.5;
+    }
+
+    String name = 'Saved Cafe';
+    String location = 'Jakarta';
+    if (json['cafe'] is Map) {
+      name = json['cafe']['name']?.toString() ?? name;
+      location = json['cafe']['address']?.toString() ?? json['cafe']['location']?.toString() ?? location;
+    } else if (json['name'] != null) {
+      name = json['name'].toString();
+      location = json['location']?.toString() ?? json['address']?.toString() ?? location;
+    }
+
+    return SavedCafe(
+      id: json['id']?.toString(),
+      cafeId: json['cafe_id']?.toString() ?? json['id']?.toString(),
+      name: name,
+      location: location,
+      rating: parseDouble(json['rating'] ?? (json['cafe'] is Map ? json['cafe']['rating'] : null)),
+      photoUrl: json['photo_url']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'cafe_id': cafeId,
+        'name': name,
+        'location': location,
+        'rating': rating,
+        'photo_url': photoUrl,
+      };
 }
 
 // ==========================================
-// SAVED CAFE STORE
+// SAVED CAFE STORE & REPOSITORY
 // ==========================================
 
 class SavedCafeStore extends ChangeNotifier {
@@ -24,36 +69,84 @@ class SavedCafeStore extends ChangeNotifier {
   static final SavedCafeStore instance = SavedCafeStore._();
 
   final List<SavedCafe> _savedCafes = [];
+  bool _isLoading = false;
+  String? _errorMessage;
 
-  // GET SAVED CAFES
   List<SavedCafe> get savedCafes => List.unmodifiable(_savedCafes);
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
 
-  // CHECK IF CAFE IS SAVED
   bool isSaved(String cafeName) {
     return _savedCafes.any(
-      (cafe) => cafe.name == cafeName,
+      (cafe) => cafe.name.trim().toLowerCase() == cafeName.trim().toLowerCase(),
     );
   }
 
-  // ADD OR REMOVE SAVED CAFE
-  void toggleSaved(SavedCafe cafe) {
-    if (isSaved(cafe.name)) {
+  Future<void> fetchSavedCafes() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await ApiClient.instance.get('/saved-cafes');
+      if (response is List) {
+        _savedCafes.clear();
+        for (final item in response) {
+          if (item is Map<String, dynamic>) {
+            _savedCafes.add(SavedCafe.fromJson(item));
+          }
+        }
+      }
+    } catch (e) {
+      // Keep existing memory items on error
+      _errorMessage = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> toggleSaved(SavedCafe cafe) async {
+    final alreadySaved = isSaved(cafe.name);
+
+    if (alreadySaved) {
       _savedCafes.removeWhere(
-        (item) => item.name == cafe.name,
+        (item) => item.name.trim().toLowerCase() == cafe.name.trim().toLowerCase(),
       );
+      notifyListeners();
+
+      try {
+        if (cafe.cafeId != null && cafe.cafeId!.isNotEmpty) {
+          await ApiClient.instance.delete('/saved-cafes/${cafe.cafeId}');
+        }
+      } catch (_) {}
     } else {
       _savedCafes.add(cafe);
-    }
+      notifyListeners();
 
-    notifyListeners();
+      try {
+        if (cafe.cafeId != null && cafe.cafeId!.isNotEmpty) {
+          await ApiClient.instance.post('/saved-cafes', body: {'cafe_id': cafe.cafeId});
+        }
+      } catch (_) {}
+    }
   }
 
-  // REMOVE CAFE
-  void removeCafe(String cafeName) {
-    _savedCafes.removeWhere(
-      (cafe) => cafe.name == cafeName,
+  Future<void> removeCafe(String cafeName) async {
+    final target = _savedCafes.firstWhere(
+      (c) => c.name.trim().toLowerCase() == cafeName.trim().toLowerCase(),
+      orElse: () => SavedCafe(name: cafeName, location: ''),
     );
 
+    _savedCafes.removeWhere(
+      (cafe) => cafe.name.trim().toLowerCase() == cafeName.trim().toLowerCase(),
+    );
     notifyListeners();
+
+    if (target.cafeId != null && target.cafeId!.isNotEmpty) {
+      try {
+        await ApiClient.instance.delete('/saved-cafes/${target.cafeId}');
+      } catch (_) {}
+    }
   }
 }

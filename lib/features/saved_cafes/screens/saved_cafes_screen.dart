@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/state_widgets.dart';
 import '../../cafe_details/screens/cafe_details_screen.dart';
 import '../models/saved_cafe.dart';
 
@@ -21,6 +22,7 @@ class _SavedCafesScreenState extends State<SavedCafesScreen> {
   void initState() {
     super.initState();
     SavedCafeStore.instance.addListener(_refresh);
+    SavedCafeStore.instance.fetchSavedCafes();
   }
 
   @override
@@ -37,7 +39,8 @@ class _SavedCafesScreenState extends State<SavedCafesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final savedCafes = SavedCafeStore.instance.savedCafes;
+    final store = SavedCafeStore.instance;
+    final savedCafes = store.savedCafes;
 
     return Scaffold(
       backgroundColor: cream,
@@ -60,22 +63,31 @@ class _SavedCafesScreenState extends State<SavedCafesScreen> {
           ),
         ),
       ),
-      body: savedCafes.isEmpty
-          ? _buildEmptyState()
-          : ListView.builder(
-              padding: const EdgeInsets.all(20),
-              itemCount: savedCafes.length,
-              itemBuilder: (context, index) {
-                final cafe = savedCafes[index];
-                return _buildCafeCard(cafe);
-              },
-            ),
+      body: RefreshIndicator(
+        color: darkGreen,
+        backgroundColor: cream,
+        onRefresh: () => store.fetchSavedCafes(),
+        child: store.isLoading && savedCafes.isEmpty
+            ? const AppLoadingWidget(message: 'Memuat kafe tersimpan...')
+            : savedCafes.isEmpty
+                ? _buildEmptyState()
+                : ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(20),
+                    itemCount: savedCafes.length,
+                    itemBuilder: (context, index) {
+                      final cafe = savedCafes[index];
+                      return _buildCafeCard(cafe);
+                    },
+                  ),
+      ),
     );
   }
 
   Widget _buildEmptyState() {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(30),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -173,6 +185,7 @@ class _SavedCafesScreenState extends State<SavedCafesScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => CafeDetailsScreen(
+                        cafeId: cafe.cafeId,
                         cafeName: cafe.name,
                         cafeLocation: cafe.location,
                       ),
