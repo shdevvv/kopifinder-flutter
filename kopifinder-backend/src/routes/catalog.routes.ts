@@ -44,11 +44,16 @@ router.get('/cafes', async (req, res, next) => {
     const query = parse(querySchema, req.query);
     if ((query.sort === 'distance' || query.lat !== undefined || query.lng !== undefined) && (query.lat === undefined || query.lng === undefined)) throw new AppError('lat dan lng wajib diisi bersama.', 400, 'VALIDATION_ERROR');
     const { page, limit, from, to } = pagination(req.query); const client = clientFor(req);
-    let q = client.from('cafes').select('id,name,area,address,lat,lng,price_min,price_max,hours,phone,whatsapp,website,instagram,facilities,photos,created_at', { count: 'exact' }).eq('is_active', true).eq('verification_status', 'verified');
+    let q = client.from('cafes').select('*', { count: 'exact' }).eq('is_active', true).eq('verification_status', 'verified');
     if (query.q) q = q.ilike('name', `%${query.q}%`); if (query.area) q = q.eq('area', query.area);
     if (query.sort === 'price') q = q.not('price_min', 'is', null).order('price_min', { ascending: true, nullsFirst: false }); else q = q.order('name');
     const { data, error, count } = await q.range(from, to); if (error) throw dbFailure(error);
-    let rows: any[] = data ?? [];
+    let rows: any[] = (data ?? []).map((x: any) => ({
+      ...x,
+      lat: x.lat ?? x.latitude,
+      lng: x.lng ?? x.longitude,
+      hours: x.hours ?? x.opening_hours,
+    }));
     if (query.sort === 'rating') {
       const ids = rows.map((x) => x.id);
       const reviews = ids.length ? await client.from('reviews').select('cafe_id,rating').in('cafe_id', ids) : { data: [], error: null };
@@ -65,15 +70,21 @@ router.get('/cafes/:id', async (req, res, next) => {
   try {
     const id = parse(uuid, req.params.id); const client = clientFor(req);
     const [cafe, menus, reviews, saved] = await Promise.all([
-      client.from('cafes').select('id,name,area,address,lat,lng,price_min,price_max,hours,phone,whatsapp,website,instagram,facilities,photos').eq('id', id).eq('is_active', true).eq('verification_status', 'verified').maybeSingle(),
+      client.from('cafes').select('*').eq('id', id).eq('is_active', true).eq('verification_status', 'verified').maybeSingle(),
       client.from('menus').select('id,name,price,category').eq('cafe_id', id).order('name'),
       client.from('reviews').select('rating').eq('cafe_id', id),
       req.user ? client.from('saved_cafes').select('id').eq('user_id', req.user.id).eq('cafe_id', id).maybeSingle() : Promise.resolve({ data: null, error: null }),
     ]);
     if (cafe.error || menus.error || reviews.error || saved.error) throw dbFailure(cafe.error ?? menus.error ?? reviews.error ?? saved.error);
     if (!cafe.data) throw new AppError('Kafe tidak ditemukan.', 404, 'NOT_FOUND');
+    const cafeData: any = {
+      ...cafe.data,
+      lat: cafe.data.lat ?? cafe.data.latitude,
+      lng: cafe.data.lng ?? cafe.data.longitude,
+      hours: cafe.data.hours ?? cafe.data.opening_hours,
+    };
     const rs: { rating: number }[] = reviews.data ?? []; const average = rs.length ? rs.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / rs.length : null;
-    sendData(req, res, { ...cafe.data, menus: menus.data ?? [], review_summary: { average_rating: average === null ? null : Number(average.toFixed(2)), review_count: rs.length }, is_saved: Boolean(saved.data) });
+    sendData(req, res, { ...cafeData, menus: menus.data ?? [], review_summary: { average_rating: average === null ? null : Number(average.toFixed(2)), review_count: rs.length }, is_saved: Boolean(saved.data) });
   } catch (e) { next(e); }
 });
 
