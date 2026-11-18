@@ -8,6 +8,9 @@ import { requestId } from './middleware/requestId';
 export const createApp = (): Express => {
   const app = express();
 
+  // Trust proxy for reverse proxy environments (Vercel, Railway, etc.)
+  app.set('trust proxy', 1);
+
   app.use(requestId);
 
   // Security & Header Middleware

@@ -6,6 +6,7 @@ export const apiRateLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false, xForwardedForHeader: false },
   message: {
     success: false,
     error: {
