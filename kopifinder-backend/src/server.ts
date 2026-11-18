@@ -3,19 +3,28 @@ import { config } from './config/env';
 
 const app = createApp();
 
-const server = app.listen(config.port, () => {
-  console.log(`[KopiFinder Backend] Server running on port ${config.port} (${config.env} mode)`);
-  console.log(`[KopiFinder Backend] Health Check: http://localhost:${config.port}/api/v1/health`);
-});
-
-// Handle graceful shutdown
-const gracefulShutdown = (signal: string) => {
-  console.log(`[KopiFinder Backend] Received ${signal}. Shutting down gracefully...`);
-  server.close(() => {
-    console.log('[KopiFinder Backend] HTTP server closed.');
-    process.exit(0);
+// Only listen if not running in a serverless environment (e.g. Vercel)
+if (process.env.VERCEL !== '1') {
+  const server = app.listen(config.port, () => {
+    console.log(`[KopiFinder Backend] Server running on port ${config.port} (${config.env} mode)`);
+    console.log(`[KopiFinder Backend] Health Check: http://localhost:${config.port}/api/v1/health`);
   });
-};
 
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  // Handle graceful shutdown
+  const gracefulShutdown = (signal: string) => {
+    console.log(`[KopiFinder Backend] Received ${signal}. Shutting down gracefully...`);
+    server.close(() => {
+      console.log('[KopiFinder Backend] HTTP server closed.');
+      process.exit(0);
+    });
+  };
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+}
+
+export default app;
+// @ts-ignore
+module.exports = app;
+// @ts-ignore
+module.exports.default = app;
