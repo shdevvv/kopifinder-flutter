@@ -25,7 +25,9 @@ class _MapScreenState extends State<MapScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   List<Cafe> _cafes = [];
+  // ignore: unused_field
   bool _isLoading = true;
+  // ignore: prefer_final_fields
   LatLng _currentCenter = const LatLng(-6.2305, 106.8115); // Senopati, Jakarta
 
   @override

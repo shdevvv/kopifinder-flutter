@@ -1,0 +1,19 @@
+# railway.toml — KopiFinder Backend Deployment Config
+# Docs: https://docs.railway.app/reference/config-as-code
+
+[build]
+builder = "NIXPACKS"
+buildCommand = "npm ci --omit=dev && npm run build"
+
+[deploy]
+startCommand = "node dist/server.js"
+healthcheckPath = "/api/v1/health"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+# Weekly OSM sync cron job (every Monday 02:00 WIB = Sunday 19:00 UTC)
+[[cronjobs]]
+name    = "weekly-osm-sync"
+schedule = "0 19 * * 0"
+command = "node dist/scripts/osmSync.js"

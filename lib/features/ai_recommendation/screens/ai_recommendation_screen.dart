@@ -421,15 +421,15 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen> {
                 ),
               ),
               const SizedBox(height: 17),
-              Row(
+              const Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.favorite_rounded,
                     color: darkCaramel,
                     size: 16,
                   ),
-                  const SizedBox(width: 6),
-                  const Text(
+                  SizedBox(width: 6),
+                  Text(
                     'Made for your coffee moments',
                     style: TextStyle(
                       color: espresso,

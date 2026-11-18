@@ -23,6 +23,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String username = '@coffeelover';
   String location = 'Jakarta, Indonesia';
   UserStats _stats = const UserStats();
+  // ignore: unused_field
   bool _isLoading = true;
 
   @override

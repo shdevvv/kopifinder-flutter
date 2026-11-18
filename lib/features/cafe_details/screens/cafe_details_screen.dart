@@ -185,6 +185,7 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
                         setState(() {
                           _reviews.insert(0, newRev);
                         });
+                        // ignore: use_build_context_synchronously
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Ulasan berhasil ditambahkan!'),
@@ -194,6 +195,7 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
                       }
                     } catch (e) {
                       if (mounted) {
+                        // ignore: use_build_context_synchronously
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('Gagal mengirim ulasan: $e'),

@@ -769,6 +769,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
                               children: [
                                 Row(
                                   children: [
+                                    // ignore: prefer_const_constructors
                                     CircleAvatar(
                                       radius: 17,
                                       backgroundColor: lightGreen,

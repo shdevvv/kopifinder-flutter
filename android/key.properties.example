@@ -1,0 +1,8 @@
+# key.properties.example
+# Copy this file to key.properties and fill in your keystore values.
+# JANGAN commit key.properties ke Git!
+
+storePassword=YOUR_KEYSTORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=kopifinder
+storeFile=../keystores/kopifinder-release.jks

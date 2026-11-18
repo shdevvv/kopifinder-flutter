@@ -41,3 +41,15 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Android signing — JANGAN commit ke Git!
+android/key.properties
+android/keystores/
+*.jks
+*.keystore
+google-services.json
+
+# Environment files
+.env
+.env.local
+.env.production
