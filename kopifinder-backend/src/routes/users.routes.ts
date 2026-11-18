@@ -24,10 +24,14 @@ router.get('/check-username', async (req, res, next) => {
 router.use(requireAuth);
 router.get('/me', async (req, res, next) => {
   try {
-    const { data, error } = await req.supabase!.from('users').select('id,name,username,avatar_url,location,created_at,updated_at').eq('id', req.user!.id).maybeSingle();
+    const { data, error } = await req.supabase!.from('users').select('*').eq('id', req.user!.id).maybeSingle();
     if (error) throw dbFailure(error);
     if (!data) throw new AppError('Profil belum tersedia.', 404, 'NOT_FOUND');
-    sendData(req, res, data);
+    const userProfile = {
+      ...data,
+      name: data.name ?? data.full_name ?? data.username,
+    };
+    sendData(req, res, userProfile);
   } catch (e) { next(e); }
 });
 

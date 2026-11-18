@@ -6,8 +6,13 @@ import { dbFailure, isOwnedStorageObject, pagination, parse, sendData, sendPage 
 import { config } from '../config/env';
 
 const router = Router(); const uuid = z.string().uuid();
-const postBody = z.object({ cafe_id: uuid, caption: z.string().trim().min(1).max(500), photo_path: z.string().max(1000).nullable().optional() }).strict();
-const commentBody = z.object({ text: z.string().trim().min(1).max(500), parent_id: uuid.nullable().optional() }).strict();
+const postBody = z.object({
+  cafe_id: uuid.nullable().optional(),
+  caption: z.string().trim().min(1).max(500),
+  photo_path: z.string().max(1000).nullable().optional(),
+  photos: z.array(z.string()).optional(),
+});
+const commentBody = z.object({ text: z.string().trim().min(1).max(500), parent_id: uuid.nullable().optional() });
 
 router.get('/posts', async (req, res, next) => {
   try {
@@ -17,12 +22,14 @@ router.get('/posts', async (req, res, next) => {
     const [likes, comments, profiles, myLikes] = await Promise.all([
       ids.length ? client.from('post_likes').select('post_id').in('post_id', ids) : Promise.resolve({ data: [], error: null }),
       ids.length ? client.from('comments').select('post_id').in('post_id', ids) : Promise.resolve({ data: [], error: null }),
-      users.length ? adminClient().from('users').select('id,name,username,avatar_url').in('id', users) : Promise.resolve({ data: [], error: null }),
+      users.length ? adminClient().from('users').select('*').in('id', users) : Promise.resolve({ data: [], error: null }),
       req.user && ids.length ? client.from('post_likes').select('post_id').eq('user_id', req.user.id).in('post_id', ids) : Promise.resolve({ data: [], error: null }),
     ]);
     const err = likes.error ?? comments.error ?? profiles.error ?? myLikes.error; if (err) throw dbFailure(err);
     const groupCount = (items: any[], key: string) => items.reduce((m, x) => m.set(x[key], (m.get(x[key]) ?? 0) + 1), new Map());
-    const lm = groupCount(likes.data ?? [], 'post_id'); const cm = groupCount(comments.data ?? [], 'post_id'); const pm = new Map((profiles.data ?? []).map((x) => [x.id, x])); const mine = new Set((myLikes.data ?? []).map((x) => x.post_id));
+    const lm = groupCount(likes.data ?? [], 'post_id'); const cm = groupCount(comments.data ?? [], 'post_id');
+    const pm = new Map((profiles.data ?? []).map((x: any) => [x.id, { ...x, name: x.name ?? x.full_name ?? x.username ?? 'Coffee Lover' }]));
+    const mine = new Set((myLikes.data ?? []).map((x) => x.post_id));
     sendPage(req, res, rows.map((x) => ({ ...x, author: pm.get(x.user_id) ?? null, likes_count: lm.get(x.id) ?? 0, comments_count: cm.get(x.id) ?? 0, is_liked: mine.has(x.id) })), page, limit, (count ?? 0) > to + 1);
   } catch (e) { next(e); }
 });
@@ -30,10 +37,20 @@ router.get('/posts', async (req, res, next) => {
 router.post('/posts', requireAuth, async (req, res, next) => {
   try {
     const body = parse(postBody, req.body); const client = req.supabase!;
-    if (!isOwnedStorageObject(body.photo_path, 'post-photos', req.user!.id, config.supabase.url)) throw new AppError('Foto post harus berasal dari folder Storage milik Anda.', 400, 'INVALID_PHOTO_PATH');
-    const cafe = await client.from('cafes').select('id').eq('id', body.cafe_id).eq('is_active', true).eq('verification_status', 'verified').maybeSingle();
-    if (cafe.error) throw dbFailure(cafe.error); if (!cafe.data) throw new AppError('Kafe tidak ditemukan.', 404, 'NOT_FOUND');
-    const { data, error } = await client.from('posts').insert({ user_id: req.user!.id, cafe_id: body.cafe_id, caption: body.caption, photo_url: body.photo_path }).select('id,cafe_id,caption,photo_url,created_at').single();
+    const photoUrl = body.photo_path ?? (body.photos && body.photos.length > 0 ? body.photos[0] : null);
+    if (photoUrl && photoUrl.includes(config.supabase.url) && !isOwnedStorageObject(photoUrl, 'post-photos', req.user!.id, config.supabase.url)) {
+      throw new AppError('Foto post harus berasal dari folder Storage milik Anda.', 400, 'INVALID_PHOTO_PATH');
+    }
+    if (body.cafe_id) {
+      const cafe = await client.from('cafes').select('id').eq('id', body.cafe_id).eq('is_active', true).eq('verification_status', 'verified').maybeSingle();
+      if (cafe.error) throw dbFailure(cafe.error); if (!cafe.data) throw new AppError('Kafe tidak ditemukan.', 404, 'NOT_FOUND');
+    }
+    const { data, error } = await client.from('posts').insert({
+      user_id: req.user!.id,
+      cafe_id: body.cafe_id ?? null,
+      caption: body.caption,
+      photo_url: photoUrl,
+    }).select('id,cafe_id,caption,photo_url,created_at').single();
     if (error) throw dbFailure(error); sendData(req, res, data, 201);
   } catch (e) { next(e); }
 });
@@ -62,11 +79,11 @@ router.get('/posts/:id/comments', async (req, res, next) => {
     const { data, error, count } = await client.from('comments').select('id,post_id,user_id,parent_id,text,created_at,updated_at', { count: 'exact' }).eq('post_id', postId).order('created_at', { ascending: true }).range(from, to);
     if (error) throw dbFailure(error); const rows = data ?? []; const ids = rows.map((x) => x.id); const users = [...new Set(rows.map((x) => x.user_id))];
     const [profiles, likes] = await Promise.all([
-      users.length ? adminClient().from('users').select('id,name,username,avatar_url').in('id', users) : Promise.resolve({ data: [], error: null }),
+      users.length ? adminClient().from('users').select('*').in('id', users) : Promise.resolve({ data: [], error: null }),
       ids.length ? client.from('comment_likes').select('comment_id').in('comment_id', ids) : Promise.resolve({ data: [], error: null }),
     ]);
     if (profiles.error || likes.error) throw dbFailure(profiles.error ?? likes.error);
-    const pm = new Map((profiles.data ?? []).map((x) => [x.id, x])); const lm = (likes.data ?? []).reduce((m: Map<string, number>, x) => m.set(x.comment_id, (m.get(x.comment_id) ?? 0) + 1), new Map());
+    const pm = new Map((profiles.data ?? []).map((x: any) => [x.id, { ...x, name: x.name ?? x.full_name ?? x.username ?? 'Coffee Lover' }])); const lm = (likes.data ?? []).reduce((m: Map<string, number>, x) => m.set(x.comment_id, (m.get(x.comment_id) ?? 0) + 1), new Map());
     sendPage(req, res, rows.map((x) => ({ ...x, author: pm.get(x.user_id) ?? null, likes_count: lm.get(x.id) ?? 0 })), page, limit, (count ?? 0) > to + 1);
   } catch (e) { next(e); }
 });
