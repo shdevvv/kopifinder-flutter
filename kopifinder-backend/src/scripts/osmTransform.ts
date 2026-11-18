@@ -16,6 +16,8 @@ export interface OsmPlaceRow {
   address: string | null;
   lat: number;
   lng: number;
+  latitude?: number;
+  longitude?: number;
   phone: string | null;
   website: string | null;
   instagram: string | null;
@@ -111,6 +113,8 @@ export function transformElement(el: OsmElement, area: OsmArea): OsmPlaceRow | n
     address: buildAddress(tags),
     lat: coords.lat,
     lng: coords.lng,
+    latitude: coords.lat,
+    longitude: coords.lng,
     phone: extractPhone(tags),
     website: extractWebsite(tags),
     instagram: extractInstagram(tags),

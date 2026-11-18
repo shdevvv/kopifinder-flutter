@@ -29,9 +29,14 @@ const AREA_OSM_NAMES: Record<OsmArea, string> = {
   Jakut: 'Jakarta Utara',
 };
 
-const OVERPASS_ENDPOINT = 'https://overpass-api.de/api/interpreter';
-const REQUEST_TIMEOUT_MS = 90_000; // 90 seconds
-const RETRY_DELAYS_MS = [5_000, 15_000, 30_000]; // backoff per retry
+const OVERPASS_ENDPOINTS = [
+  'https://overpass.openstreetmap.fr/api/interpreter',
+  'https://lz4.overpass-api.de/api/interpreter',
+  'https://z.overpass-api.de/api/interpreter',
+  'https://overpass-api.de/api/interpreter',
+];
+const REQUEST_TIMEOUT_MS = 60_000;
+const RETRY_DELAYS_MS = [3_000, 5_000, 10_000];
 
 /** Build Overpass QL query for cafes in a named Jakarta area */
 function buildQuery(areaName: string): string {
@@ -61,15 +66,19 @@ export async function queryOsmCafes(area: OsmArea): Promise<OsmElement[]> {
   const query = buildQuery(areaName);
 
   for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    const endpoint = OVERPASS_ENDPOINTS[attempt % OVERPASS_ENDPOINTS.length];
     try {
-      console.log(`[OSM] Querying ${area} (${areaName}), attempt ${attempt + 1}...`);
+      console.log(`[OSM] Querying ${area} (${areaName}), attempt ${attempt + 1} via ${new URL(endpoint).hostname}...`);
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-      const response = await fetch(OVERPASS_ENDPOINT, {
+      const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'KopiFinderApp/1.0 (https://kopifinder.app; contact@kopifinder.app)',
+        },
         body: `data=${encodeURIComponent(query)}`,
         signal: controller.signal,
       });

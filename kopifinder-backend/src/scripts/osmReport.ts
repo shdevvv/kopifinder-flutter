@@ -27,11 +27,10 @@ export async function startSyncRun(area: OsmArea): Promise<SyncRunRecord | null>
     .from('sync_runs')
     .insert({
       area,
-      status: 'running',
-      found_count: 0,
-      inserted_count: 0,
-      updated_count: 0,
-      marked_stale_count: 0,
+      status: 'started',
+      records_total: 0,
+      records_added: 0,
+      records_updated: 0,
     })
     .select('id, started_at, area')
     .single();
@@ -61,12 +60,11 @@ export async function finishSyncRun(params: SyncRunFinishParams): Promise<void> 
   const { error } = await supabase
     .from('sync_runs')
     .update({
-      finished_at: new Date().toISOString(),
-      status: params.status,
-      found_count: params.foundCount,
-      inserted_count: params.insertedCount,
-      updated_count: params.updatedCount,
-      marked_stale_count: params.markedStaleCount,
+      completed_at: new Date().toISOString(),
+      status: params.status === 'success' ? 'completed' : 'failed',
+      records_total: params.foundCount,
+      records_added: params.insertedCount,
+      records_updated: params.updatedCount,
       error_message: params.errorMessage ?? null,
     })
     .eq('id', params.runId);
