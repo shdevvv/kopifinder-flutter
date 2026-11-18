@@ -1,4 +1,4 @@
-package com.example.kopifinder
+package com.kopifinder.app
 
 import io.flutter.embedding.android.FlutterActivity
 

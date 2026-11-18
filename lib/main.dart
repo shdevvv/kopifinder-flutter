@@ -4,6 +4,10 @@ import 'core/services/supabase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await SupabaseService.instance.initialize();
+  try {
+    await SupabaseService.instance.initialize();
+  } catch (e) {
+    debugPrint('Supabase init error: $e');
+  }
   runApp(const KopiFinderApp());
 }
