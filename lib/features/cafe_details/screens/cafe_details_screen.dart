@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../home/models/cafe.dart';
 import '../../home/repositories/cafe_repository.dart';
 import '../../saved_cafes/models/saved_cafe.dart';
@@ -241,22 +242,48 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
                       ],
                     ),
                     const SizedBox(height: 14),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 54,
-                      child: ElevatedButton.icon(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.map_outlined),
-                        label: const Text('View on Map'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: darkGreen,
-                          foregroundColor: Colors.white,
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                    Row(
+                      children: [
+                        // View on Map button
+                        Expanded(
+                          child: SizedBox(
+                            height: 54,
+                            child: ElevatedButton.icon(
+                              onPressed: () => Navigator.pop(context),
+                              icon: const Icon(Icons.map_outlined),
+                              label: const Text('View on Map'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: darkGreen,
+                                foregroundColor: Colors.white,
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                        const SizedBox(width: 10),
+                        // Route via Google Maps button
+                        Expanded(
+                          child: SizedBox(
+                            height: 54,
+                            child: ElevatedButton.icon(
+                              onPressed: () => _openGoogleMapsRoute(),
+                              icon: const Icon(Icons.directions_rounded),
+                              label: const Text('Rute'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF4285F4),
+                                foregroundColor: Colors.white,
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 25),
                   ],
@@ -316,6 +343,38 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _openGoogleMapsRoute() async {
+    final lat = _cafeData?.latitude;
+    final lng = _cafeData?.longitude;
+    if (lat == null || lng == null) {
+      // Fallback: search by name
+      final encodedName = Uri.encodeComponent(_cafeName);
+      final url = Uri.parse(
+        'https://www.google.com/maps/search/?api=1&query=$encodedName',
+      );
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      }
+      return;
+    }
+    final url = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1'
+      '&destination=$lat,$lng'
+      '&travelmode=driving',
+    );
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not open Google Maps'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 
   Widget _circleButton({required IconData icon, required VoidCallback onPressed}) {
