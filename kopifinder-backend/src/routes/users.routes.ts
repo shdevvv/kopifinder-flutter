@@ -7,10 +7,12 @@ import { dbFailure, pagination, parse, sendData, sendPage } from '../utils/api';
 const router = Router();
 const profileSchema = z.object({
   name: z.string().trim().min(2).max(100).optional(),
+  full_name: z.string().trim().min(2).max(100).optional(),
   username: z.string().trim().toLowerCase().regex(/^[a-z0-9_]{3,30}$/).optional(),
   avatar_url: z.string().url().nullable().optional(),
   location: z.string().trim().max(100).nullable().optional(),
-}).strict().refine((x) => Object.keys(x).length > 0);
+  bio: z.string().trim().max(500).nullable().optional(),
+}).refine((x) => Object.keys(x).length > 0);
 
 router.get('/check-username', async (req, res, next) => {
   try {
@@ -24,19 +26,50 @@ router.get('/check-username', async (req, res, next) => {
 router.use(requireAuth);
 router.get('/me', async (req, res, next) => {
   try {
-    const { data, error } = await req.supabase!.from('users').select('id,name,username,avatar_url,location,created_at,updated_at').eq('id', req.user!.id).maybeSingle();
+    const { data, error } = await req.supabase!.from('users').select('id,username,full_name,avatar_url,role,created_at,updated_at').eq('id', req.user!.id).maybeSingle();
     if (error) throw dbFailure(error);
     if (!data) throw new AppError('Profil belum tersedia.', 404, 'NOT_FOUND');
-    sendData(req, res, data);
+    sendData(req, res, {
+      id: data.id,
+      name: data.full_name,
+      full_name: data.full_name,
+      username: data.username,
+      avatar_url: data.avatar_url,
+      location: 'Jakarta, Indonesia',
+      role: data.role,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+    });
   } catch (e) { next(e); }
 });
 
 router.patch('/me', async (req, res, next) => {
   try {
     const body = parse(profileSchema, req.body);
-    const { data, error } = await req.supabase!.from('users').update(body).eq('id', req.user!.id).select('id,name,username,avatar_url,location,updated_at').single();
+    const updates: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+    if (body.full_name || body.name) {
+      updates.full_name = body.full_name ?? body.name;
+    }
+    if (body.username) {
+      updates.username = body.username;
+    }
+    if (body.avatar_url !== undefined) {
+      updates.avatar_url = body.avatar_url;
+    }
+
+    const { data, error } = await req.supabase!.from('users').update(updates).eq('id', req.user!.id).select('id,username,full_name,avatar_url,role,updated_at').single();
     if (error) throw dbFailure(error);
-    sendData(req, res, data);
+    sendData(req, res, {
+      id: data.id,
+      name: data.full_name,
+      full_name: data.full_name,
+      username: data.username,
+      avatar_url: data.avatar_url,
+      location: 'Jakarta, Indonesia',
+      updated_at: data.updated_at,
+    });
   } catch (e) { next(e); }
 });
 
