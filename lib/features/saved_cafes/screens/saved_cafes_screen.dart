@@ -140,6 +140,8 @@ class _SavedCafesScreenState extends State<SavedCafesScreen> {
   }
 
   Widget _buildCafeCard(SavedCafe cafe) {
+    final photoUrl = cafe.photoUrl;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
       child: Container(
@@ -160,19 +162,18 @@ class _SavedCafesScreenState extends State<SavedCafesScreen> {
         ),
         child: Row(
           children: [
-            // CAFE IMAGE PLACEHOLDER
-            Container(
-              width: 90,
-              height: 100,
-              decoration: BoxDecoration(
-                color: lightGreen,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: const Icon(
-                Icons.local_cafe_rounded,
-                size: 37,
-                color: darkGreen,
-              ),
+            // REAL CAFE PHOTO OR FALLBACK
+            ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: (photoUrl != null && photoUrl.isNotEmpty)
+                  ? Image.network(
+                      photoUrl,
+                      width: 90,
+                      height: 100,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => _placeholderImage(),
+                    )
+                  : _placeholderImage(),
             ),
 
             const SizedBox(width: 13),
@@ -251,6 +252,22 @@ class _SavedCafesScreenState extends State<SavedCafesScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _placeholderImage() {
+    return Container(
+      width: 90,
+      height: 100,
+      decoration: BoxDecoration(
+        color: lightGreen,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: const Icon(
+        Icons.local_cafe_rounded,
+        size: 37,
+        color: darkGreen,
       ),
     );
   }

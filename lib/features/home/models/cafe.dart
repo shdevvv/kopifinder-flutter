@@ -2,6 +2,7 @@ class Cafe {
   final String id;
   final String name;
   final String address;
+  final String area;
   final double? latitude;
   final double? longitude;
   final String? priceRange;
@@ -16,6 +17,7 @@ class Cafe {
     required this.id,
     required this.name,
     required this.address,
+    this.area = 'Jaksel',
     this.latitude,
     this.longitude,
     this.priceRange,
@@ -51,6 +53,7 @@ class Cafe {
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? 'Unnamed Cafe',
       address: json['address']?.toString() ?? json['location']?.toString() ?? 'Jakarta',
+      area: json['area']?.toString() ?? 'Jaksel',
       latitude: json['latitude'] != null ? parseDouble(json['latitude']) : null,
       longitude: json['longitude'] != null ? parseDouble(json['longitude']) : null,
       priceRange: json['price_range']?.toString(),
@@ -67,6 +70,7 @@ class Cafe {
         'id': id,
         'name': name,
         'address': address,
+        'area': area,
         'latitude': latitude,
         'longitude': longitude,
         'price_range': priceRange,

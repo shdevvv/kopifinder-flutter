@@ -32,15 +32,33 @@ class SavedCafe {
 
     String name = 'Saved Cafe';
     String location = 'Jakarta';
+    String? photoUrl;
+
     if (json['cafe'] is Map) {
-      name = json['cafe']['name']?.toString() ?? name;
-      location = json['cafe']['address']?.toString() ?? json['cafe']['location']?.toString() ?? location;
+      final cafeMap = json['cafe'] as Map;
+      name = cafeMap['name']?.toString() ?? name;
+      location = cafeMap['address']?.toString() ?? cafeMap['location']?.toString() ?? location;
+      if (cafeMap['photos'] is List && (cafeMap['photos'] as List).isNotEmpty) {
+        photoUrl = (cafeMap['photos'] as List).first.toString();
+      }
     } else if (json['cafes'] is Map) {
-      name = json['cafes']['name']?.toString() ?? name;
-      location = json['cafes']['address']?.toString() ?? json['cafes']['location']?.toString() ?? location;
+      final cafesMap = json['cafes'] as Map;
+      name = cafesMap['name']?.toString() ?? name;
+      location = cafesMap['address']?.toString() ?? cafesMap['location']?.toString() ?? location;
+      if (cafesMap['photos'] is List && (cafesMap['photos'] as List).isNotEmpty) {
+        photoUrl = (cafesMap['photos'] as List).first.toString();
+      }
     } else if (json['name'] != null) {
       name = json['name'].toString();
       location = json['location']?.toString() ?? json['address']?.toString() ?? location;
+    }
+
+    if (photoUrl == null || photoUrl.isEmpty) {
+      if (json['photo_url'] != null) {
+        photoUrl = json['photo_url'].toString();
+      } else if (json['photos'] is List && (json['photos'] as List).isNotEmpty) {
+        photoUrl = (json['photos'] as List).first.toString();
+      }
     }
 
     return SavedCafe(
@@ -49,7 +67,7 @@ class SavedCafe {
       name: name,
       location: location,
       rating: parseDouble(json['rating'] ?? (json['cafe'] is Map ? json['cafe']['rating'] : null)),
-      photoUrl: json['photo_url']?.toString(),
+      photoUrl: photoUrl,
     );
   }
 

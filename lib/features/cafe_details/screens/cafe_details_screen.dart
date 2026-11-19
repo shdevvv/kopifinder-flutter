@@ -294,11 +294,16 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
   }
 
   void _toggleBookmark() {
+    final photo = (_cafeData?.photos.isNotEmpty == true)
+        ? _cafeData!.photos.first
+        : (widget.cafe?.photos.isNotEmpty == true ? widget.cafe!.photos.first : null);
+
     SavedCafeStore.instance.toggleSaved(
       SavedCafe(
         cafeId: _cafeId,
         name: _cafeName,
         location: _cafeLocation,
+        photoUrl: photo,
       ),
     );
     setState(() {});
