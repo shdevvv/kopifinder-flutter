@@ -12,7 +12,7 @@ const commentBody = z.object({ text: z.string().trim().min(1).max(500), parent_i
 router.get('/posts', async (req, res, next) => {
   try {
     const { page, limit, from, to } = pagination(req.query); const client = req.supabase ?? createSupabaseClient();
-    const { data, error, count } = await client.from('posts').select('id,user_id,cafe_id,caption,photo_url,created_at,updated_at', { count: 'exact' }).order('created_at', { ascending: false }).range(from, to);
+    const { data, error, count } = await client.from('posts').select('id,user_id,cafe_id,caption,photo_url,likes_count,comments_count,created_at', { count: 'exact' }).order('created_at', { ascending: false }).range(from, to);
     if (error) throw dbFailure(error); const rows = data ?? []; const ids = rows.map((x) => x.id); const users = [...new Set(rows.map((x) => x.user_id))];
     const [likes, comments, profiles, myLikes] = await Promise.all([
       ids.length ? client.from('post_likes').select('post_id').in('post_id', ids) : Promise.resolve({ data: [], error: null }),
@@ -25,7 +25,7 @@ router.get('/posts', async (req, res, next) => {
     const lm = groupCount(likes.data ?? [], 'post_id'); const cm = groupCount(comments.data ?? [], 'post_id');
     const pm = new Map((profiles.data ?? []).map((x: any) => [x.id, { ...x, name: x.full_name }]));
     const mine = new Set((myLikes.data ?? []).map((x) => x.post_id));
-    sendPage(req, res, rows.map((x) => ({ ...x, author: pm.get(x.user_id) ?? null, likes_count: lm.get(x.id) ?? 0, comments_count: cm.get(x.id) ?? 0, is_liked: mine.has(x.id) })), page, limit, (count ?? 0) > to + 1);
+    sendPage(req, res, rows.map((x) => ({ ...x, author: pm.get(x.user_id) ?? null, likes_count: (x.likes_count ?? 0) || (lm.get(x.id) ?? 0), comments_count: (x.comments_count ?? 0) || (cm.get(x.id) ?? 0), is_liked: mine.has(x.id) })), page, limit, (count ?? 0) > to + 1);
   } catch (e) { next(e); }
 });
 
@@ -72,7 +72,7 @@ router.delete('/posts/:id/like', requireAuth, async (req, res, next) => {
 router.get('/posts/:id/comments', async (req, res, next) => {
   try {
     const postId = parse(uuid, req.params.id); const { page, limit, from, to } = pagination(req.query); const client = req.supabase ?? createSupabaseClient();
-    const { data, error, count } = await client.from('comments').select('id,post_id,user_id,parent_id,text,created_at,updated_at', { count: 'exact' }).eq('post_id', postId).order('created_at', { ascending: true }).range(from, to);
+    const { data, error, count } = await client.from('comments').select('id,post_id,user_id,parent_id,content,created_at', { count: 'exact' }).eq('post_id', postId).order('created_at', { ascending: true }).range(from, to);
     if (error) throw dbFailure(error); const rows = data ?? []; const ids = rows.map((x) => x.id); const users = [...new Set(rows.map((x) => x.user_id))];
     const [profiles, likes] = await Promise.all([
       users.length ? adminClient().from('users').select('id,full_name,username,avatar_url').in('id', users) : Promise.resolve({ data: [], error: null }),
@@ -80,7 +80,7 @@ router.get('/posts/:id/comments', async (req, res, next) => {
     ]);
     if (profiles.error || likes.error) throw dbFailure(profiles.error ?? likes.error);
     const pm = new Map((profiles.data ?? []).map((x: any) => [x.id, { ...x, name: x.full_name }])); const lm = (likes.data ?? []).reduce((m: Map<string, number>, x) => m.set(x.comment_id, (m.get(x.comment_id) ?? 0) + 1), new Map());
-    sendPage(req, res, rows.map((x) => ({ ...x, author: pm.get(x.user_id) ?? null, likes_count: lm.get(x.id) ?? 0 })), page, limit, (count ?? 0) > to + 1);
+    sendPage(req, res, rows.map((x) => ({ ...x, text: (x as any).content ?? (x as any).text ?? '', author: pm.get(x.user_id) ?? null, likes_count: lm.get(x.id) ?? 0 })), page, limit, (count ?? 0) > to + 1);
   } catch (e) { next(e); }
 });
 
@@ -89,8 +89,8 @@ router.post('/posts/:id/comments', requireAuth, async (req, res, next) => {
     const postId = parse(uuid, req.params.id); const body = parse(commentBody, req.body); const client = req.supabase!;
     const post = await client.from('posts').select('id').eq('id', postId).maybeSingle(); if (post.error) throw dbFailure(post.error); if (!post.data) throw new AppError('Post tidak ditemukan.', 404, 'NOT_FOUND');
     if (body.parent_id) { const parent = await client.from('comments').select('id,parent_id').eq('id', body.parent_id).eq('post_id', postId).maybeSingle(); if (parent.error) throw dbFailure(parent.error); if (!parent.data || parent.data.parent_id) throw new AppError('parent_id harus komentar tingkat atas pada post yang sama.', 400, 'VALIDATION_ERROR'); }
-    const { data, error } = await client.from('comments').insert({ post_id: postId, user_id: req.user!.id, text: body.text, parent_id: body.parent_id ?? null }).select('id,post_id,parent_id,text,created_at').single();
-    if (error) throw dbFailure(error); sendData(req, res, data, 201);
+    const { data, error } = await client.from('comments').insert({ post_id: postId, user_id: req.user!.id, content: body.text, parent_id: body.parent_id ?? null }).select('id,post_id,parent_id,content,created_at').single();
+    if (error) throw dbFailure(error); sendData(req, res, { ...data, text: (data as any).content ?? '' }, 201);
   } catch (e) { next(e); }
 });
 

@@ -9,37 +9,26 @@ class CommunityRepository {
   final ApiClient _api = ApiClient.instance;
 
   Future<List<CommunityPost>> getPosts({int page = 1, int limit = 20}) async {
+    // 1. Fetch via Backend API (uses admin role to join author profiles cleanly)
+    try {
+      final response = await _api.get('/posts', queryParameters: {'page': page, 'limit': limit});
+      if (response is List && response.isNotEmpty) {
+        return response.map((p) => CommunityPost.fromJson(p as Map<String, dynamic>)).toList();
+      }
+    } catch (_) {}
+
     final sb = SupabaseService.instance;
 
-    // 1. Direct fetch from Supabase table 'posts'
+    // 2. Direct fetch from Supabase table 'posts' (fallback)
     if (sb.isInitialized && sb.client != null) {
       try {
         final data = await sb.client!
             .from('posts')
-            .select('id,user_id,cafe_id,caption,photo_url,likes_count,comments_count,created_at')
+            .select('id,user_id,cafe_id,caption,photo_url,likes_count,comments_count,created_at,users(id,full_name,username,avatar_url)')
             .order('created_at', ascending: false)
             .limit(limit);
 
         if (data.isNotEmpty) {
-          final userIds = data
-              .map((p) => p['user_id']?.toString())
-              .where((id) => id != null && id.isNotEmpty)
-              .toSet()
-              .toList();
-
-          Map<String, Map<String, dynamic>> profiles = {};
-          if (userIds.isNotEmpty) {
-            try {
-              final usersData = await sb.client!
-                  .from('users')
-                  .select('id,full_name,username,avatar_url')
-                  .filter('id', 'in', userIds);
-              for (final u in (usersData as List)) {
-                profiles[u['id'].toString()] = u as Map<String, dynamic>;
-              }
-            } catch (_) {}
-          }
-
           Set<String> myLikes = {};
           if (sb.currentUser != null) {
             try {
@@ -53,20 +42,21 @@ class CommunityRepository {
             } catch (_) {}
           }
 
+          final currentMeta = sb.currentUser?.userMetadata;
+          final myName = (currentMeta?['full_name'] ?? currentMeta?['name'] ?? currentMeta?['username'])?.toString();
+
           return data.map((p) {
             final uid = p['user_id']?.toString();
-            final profile = uid != null ? profiles[uid] : null;
-            final currentMeta = sb.currentUser?.userMetadata;
-            final myName = (currentMeta?['full_name'] ?? currentMeta?['name'] ?? currentMeta?['username'])?.toString();
-            final author = profile?['full_name']?.toString() ??
-                profile?['username']?.toString() ??
-                (uid == sb.currentUser?.id ? (myName ?? 'User') : 'Pengguna KopiFinder');
+            final userObj = p['users'] as Map<String, dynamic>?;
+            final author = userObj?['full_name']?.toString() ??
+                userObj?['username']?.toString() ??
+                (uid == sb.currentUser?.id ? (myName ?? '') : '');
 
             return CommunityPost(
               id: p['id']?.toString(),
               userId: uid,
-              name: author,
-              avatarUrl: profile?['avatar_url']?.toString(),
+              name: author.isNotEmpty ? author : (myName != null && myName.isNotEmpty ? myName : 'Stephanie Halim'),
+              avatarUrl: userObj?['avatar_url']?.toString(),
               location: 'Jakarta',
               caption: p['caption']?.toString() ?? '',
               imageUrl: p['photo_url']?.toString(),
@@ -78,14 +68,6 @@ class CommunityRepository {
         }
       } catch (_) {}
     }
-
-    // 2. Fetch via Backend API
-    try {
-      final response = await _api.get('/posts', queryParameters: {'page': page, 'limit': limit});
-      if (response is List && response.isNotEmpty) {
-        return response.map((p) => CommunityPost.fromJson(p as Map<String, dynamic>)).toList();
-      }
-    } catch (_) {}
 
     return _defaultPosts();
   }
@@ -112,7 +94,7 @@ class CommunityRepository {
         String authorName = currentUser.userMetadata?['full_name']?.toString() ??
             currentUser.userMetadata?['name']?.toString() ??
             currentUser.userMetadata?['username']?.toString() ??
-            'User';
+            'Stephanie Halim';
         try {
           final u = await sb.client!.from('users').select('full_name,username').eq('id', currentUser.id).maybeSingle();
           if (u != null && u['full_name'] != null && u['full_name'].toString().isNotEmpty) {
@@ -150,7 +132,7 @@ class CommunityRepository {
     final meta = currentUser?.userMetadata;
     return CommunityPost(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: (meta?['full_name'] ?? meta?['name'] ?? meta?['username'] ?? 'User').toString(),
+      name: (meta?['full_name'] ?? meta?['name'] ?? meta?['username'] ?? 'Stephanie Halim').toString(),
       location: 'Jakarta',
       caption: caption,
       createdAt: DateTime.now(),

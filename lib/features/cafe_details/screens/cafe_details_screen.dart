@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import '../../home/models/cafe.dart';
 import '../../home/repositories/cafe_repository.dart';
 import '../../saved_cafes/models/saved_cafe.dart';
-import '../models/review.dart';
-import '../repositories/review_repository.dart';
 
 class CafeDetailsScreen extends StatefulWidget {
   final String? cafeId;
@@ -36,9 +34,6 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
   late String _cafeId;
   Cafe? _cafeData;
 
-  List<Review> _reviews = [];
-  bool _isLoadingReviews = true;
-
   @override
   void initState() {
     super.initState();
@@ -65,154 +60,6 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
         }
       } catch (_) {}
     }
-
-    try {
-      final revs = await ReviewRepository.instance.getCafeReviews(_cafeId);
-      if (mounted) {
-        setState(() {
-          _reviews = revs;
-          _isLoadingReviews = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() => _isLoadingReviews = false);
-      }
-    }
-  }
-
-  void _showAddReviewDialog() {
-    int selectedRating = 5;
-    final commentController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: cream,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-              title: const Text(
-                'Tulis Ulasan ☕',
-                style: TextStyle(
-                  color: darkBrown,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Rating Anda:',
-                      style: TextStyle(
-                        color: darkBrown,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(5, (index) {
-                        final star = index + 1;
-                        return IconButton(
-                          icon: Icon(
-                            star <= selectedRating ? Icons.star_rounded : Icons.star_border_rounded,
-                            color: const Color(0xFFFFB300),
-                            size: 32,
-                          ),
-                          onPressed: () {
-                            setDialogState(() {
-                              selectedRating = star;
-                            });
-                          },
-                        );
-                      }),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: commentController,
-                      maxLines: 4,
-                      decoration: InputDecoration(
-                        hintText: 'Bagikan pengalaman Anda di kafe ini...',
-                        hintStyle: TextStyle(
-                          color: brown.withOpacity(0.55),
-                          fontSize: 13,
-                        ),
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: Color(0xFFE4E8DC)),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Batal', style: TextStyle(color: brown)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: darkGreen,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  onPressed: () async {
-                    final comment = commentController.text.trim();
-                    if (comment.isEmpty) return;
-
-                    Navigator.pop(dialogContext);
-
-                    try {
-                      final newRev = await ReviewRepository.instance.addReview(
-                        cafeId: _cafeId,
-                        rating: selectedRating,
-                        comment: comment,
-                      );
-                      if (mounted) {
-                        setState(() {
-                          _reviews.insert(0, newRev);
-                        });
-                        // ignore: use_build_context_synchronously
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Ulasan berhasil ditambahkan!'),
-                            backgroundColor: darkGreen,
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        // ignore: use_build_context_synchronously
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Gagal mengirim ulasan: $e'),
-                            backgroundColor: const Color(0xFFD32F2F),
-                          ),
-                        );
-                      }
-                    }
-                  },
-                  child: const Text('Kirim'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
   }
 
   @override
@@ -373,48 +220,6 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
                     ),
                     const SizedBox(height: 25),
 
-                    // REVIEWS SECTION
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _sectionTitle('Ulasan (${_reviews.length})'),
-                        TextButton.icon(
-                          onPressed: _showAddReviewDialog,
-                          icon: const Icon(Icons.edit_note_rounded, color: darkGreen, size: 20),
-                          label: const Text(
-                            'Tulis Ulasan',
-                            style: TextStyle(
-                              color: darkGreen,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-
-                    if (_isLoadingReviews)
-                      const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(16),
-                          child: CircularProgressIndicator(color: darkGreen),
-                        ),
-                      )
-                    else if (_reviews.isEmpty)
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(18),
-                        decoration: _sectionDecoration(),
-                        child: const Text(
-                          'Belum ada ulasan untuk kafe ini. Jadilah yang pertama memberikan ulasan!',
-                          style: TextStyle(color: brown, fontSize: 13),
-                        ),
-                      )
-                    else
-                      ..._reviews.map((rev) => _buildReviewCard(rev)),
-
-                    const SizedBox(height: 25),
                     _sectionTitle('Location'),
                     const SizedBox(height: 10),
                     Container(
@@ -650,66 +455,4 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
     );
   }
 
-  Widget _buildReviewCard(Review review) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: _sectionDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: lightGreen,
-                child: Text(
-                  review.authorName.isNotEmpty ? review.authorName[0].toUpperCase() : 'U',
-                  style: const TextStyle(
-                    color: darkGreen,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      review.authorName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: darkBrown,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: List.generate(5, (index) {
-                        return Icon(
-                          index < review.rating ? Icons.star_rounded : Icons.star_border_rounded,
-                          color: const Color(0xFFFFB300),
-                          size: 15,
-                        );
-                      }),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            review.comment,
-            style: const TextStyle(
-              color: brown,
-              fontSize: 13,
-              height: 1.4,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

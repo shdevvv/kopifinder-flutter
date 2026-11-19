@@ -3,9 +3,7 @@ import '../../../core/widgets/state_widgets.dart';
 import '../../cafe_details/screens/cafe_details_screen.dart';
 import '../../saved_cafes/screens/saved_cafes_screen.dart';
 import '../models/cafe.dart';
-import '../models/offer.dart';
 import '../repositories/cafe_repository.dart';
-import '../repositories/offer_repository.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,7 +31,6 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   List<Cafe> _cafes = [];
-  List<Offer> _offers = [];
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -56,18 +53,14 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      final results = await Future.wait([
-        CafeRepository.instance.getCafes(
-          search: _searchController.text.trim(),
-          tag: selectedFilter,
-        ),
-        OfferRepository.instance.getOffers(),
-      ]);
+      final cafes = await CafeRepository.instance.getCafes(
+        search: _searchController.text.trim(),
+        tag: selectedFilter,
+      );
 
       if (mounted) {
         setState(() {
-          _cafes = results[0] as List<Cafe>;
-          _offers = results[1] as List<Offer>;
+          _cafes = cafes;
           _isLoading = false;
         });
       }
@@ -104,22 +97,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  String _formatRupiah(int price) {
-    final s = price.toString();
-    final buffer = StringBuffer('Rp');
-    final start = s.length % 3;
-    if (start > 0) buffer.write(s.substring(0, start));
-    for (int i = start; i < s.length; i += 3) {
-      if (i > 0) buffer.write('.');
-      buffer.write(s.substring(i, i + 3));
-    }
-    return buffer.toString();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final activeOffer = _offers.isNotEmpty ? _offers.first : null;
-
     return Scaffold(
       backgroundColor: cream,
       body: SafeArea(
@@ -307,133 +286,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
 
                 const SizedBox(height: 28),
-
-                // SPECIAL OFFERS
-                if (activeOffer != null) ...[
-                  const Row(
-                    children: [
-                      Icon(
-                        Icons.local_offer_rounded,
-                        color: darkGreen,
-                        size: 21,
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        'Special Offers',
-                        style: TextStyle(
-                          fontSize: 19,
-                          fontWeight: FontWeight.bold,
-                          color: darkBrown,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 13),
-
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(17),
-                    decoration: BoxDecoration(
-                      color: lightGreen,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: const Color(0xFFDCE4D3),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                activeOffer.title,
-                                style: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                  color: darkBrown,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 5,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: darkGreen,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  '${activeOffer.discountPercentage}% OFF',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      _formatRupiah(activeOffer.originalPrice),
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: brown.withOpacity(0.7),
-                                        decoration: TextDecoration.lineThrough,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Flexible(
-                                    child: Text(
-                                      _formatRupiah(activeOffer.discountedPrice),
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                        color: darkBrown,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                activeOffer.cafeName,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: darkGreen,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(width: 12),
-
-                        Container(
-                          width: 105,
-                          height: 105,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFDCE4D3),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Icon(
-                            Icons.coffee_rounded,
-                            color: sage,
-                            size: 42,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 28),
-                ],
 
                 // POPULAR CAFES
                 const Row(

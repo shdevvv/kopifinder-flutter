@@ -12,7 +12,7 @@ router.get('/cafes/:id/reviews', async (req, res, next) => {
   try {
     const cafeId = parse(uuid, req.params.id); const { page, limit, from, to } = pagination(req.query); const client = req.supabase;
     const queryClient = client ?? (await import('../middleware/auth')).createSupabaseClient();
-    const { data, error, count } = await queryClient.from('reviews').select('id,user_id,cafe_id,rating,text,photo_url,created_at,updated_at', { count: 'exact' }).eq('cafe_id', cafeId).order('created_at', { ascending: false }).range(from, to);
+    const { data, error, count } = await queryClient.from('reviews').select('id,user_id,cafe_id,rating,text,photo_url,created_at', { count: 'exact' }).eq('cafe_id', cafeId).order('created_at', { ascending: false }).range(from, to);
     if (error) throw dbFailure(error);
     const rows = data ?? []; const userIds = [...new Set(rows.map((x) => x.user_id))];
     // Read only explicitly public profile fields; never expose email or auth metadata.
