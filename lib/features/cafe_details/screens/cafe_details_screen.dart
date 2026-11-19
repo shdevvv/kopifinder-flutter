@@ -41,7 +41,6 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
     _cafeLocation = widget.cafe?.address ?? widget.cafeLocation;
     _cafeId = widget.cafe?.id ?? widget.cafeId ?? 'cafe-1';
     _cafeData = widget.cafe;
-
     _loadData();
   }
 
@@ -70,6 +69,7 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
     final facilities = _cafeData?.facilities.isNotEmpty == true
         ? _cafeData!.facilities
         : ['Free Wi-Fi', 'Air Conditioning', 'Parking', 'Indoor Seating'];
+    final photos = _cafeData?.photos ?? [];
 
     return Scaffold(
       backgroundColor: cream,
@@ -81,35 +81,23 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
               // Cafe Photo Header
               Stack(
                 children: [
-                  Container(
-                    height: 250,
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: lightGreen,
-                      borderRadius: BorderRadius.only(
+                  // SHOW REAL PHOTO if available, else green placeholder
+                  if (photos.isNotEmpty)
+                    ClipRRect(
+                      borderRadius: const BorderRadius.only(
                         bottomLeft: Radius.circular(30),
                         bottomRight: Radius.circular(30),
                       ),
-                    ),
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.local_cafe_rounded,
-                          size: 65,
-                          color: darkGreen,
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          'Cafe Photos',
-                          style: TextStyle(
-                            color: darkBrown,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                      child: Image.network(
+                        photos[0],
+                        height: 250,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _photoPlaceholder(),
+                      ),
+                    )
+                  else
+                    _photoPlaceholder(),
                   Positioned(
                     top: 15,
                     left: 15,
@@ -147,126 +135,118 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(
-                          Icons.location_on_rounded,
-                          color: sage,
-                          size: 19,
-                        ),
+                        const Icon(Icons.location_on_rounded, color: sage, size: 19),
                         const SizedBox(width: 5),
                         Expanded(
                           child: Text(
                             _cafeLocation,
-                            style: const TextStyle(
-                              color: brown,
-                              fontSize: 13,
-                            ),
+                            style: const TextStyle(color: brown, fontSize: 13),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 25),
-                    _sectionTitle('Rating'),
-                    const SizedBox(height: 10),
-                    _infoCard(
-                      icon: Icons.star_rounded,
-                      title: '${rating.toStringAsFixed(1)} / 5.0',
-                      subtitle: 'Berdasarkan ulasan pengunjung terverifikasi',
+                    const SizedBox(height: 20),
+
+                    // RATING + OPENING HOURS side by side
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _sectionTitle('Rating'),
+                              const SizedBox(height: 8),
+                              _compactInfoCard(
+                                icon: Icons.star_rounded,
+                                title: '${rating.toStringAsFixed(1)} / 5.0',
+                                subtitle: 'Ulasan pengunjung',
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _sectionTitle('Jam Buka'),
+                              const SizedBox(height: 8),
+                              _compactInfoCard(
+                                icon: Icons.access_time_rounded,
+                                title: 'Operasional',
+                                subtitle: hours,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 25),
-                    _sectionTitle('Opening Hours'),
-                    const SizedBox(height: 10),
-                    _infoCard(
-                      icon: Icons.access_time_rounded,
-                      title: 'Jam Operasional',
-                      subtitle: hours,
+
+                    const SizedBox(height: 20),
+
+                    // PRICE RANGE + FACILITIES side by side
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _sectionTitle('Harga'),
+                              const SizedBox(height: 8),
+                              _compactInfoCard(
+                                icon: Icons.payments_outlined,
+                                title: 'Kisaran',
+                                subtitle: price,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _sectionTitle('Fasilitas'),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
+                                children: facilities.take(4).map((fac) {
+                                  return _facilityChipSmall(_getFacilityIcon(fac), fac);
+                                }).toList(),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 25),
-                    _sectionTitle('Price Range'),
-                    const SizedBox(height: 10),
-                    _infoCard(
-                      icon: Icons.payments_outlined,
-                      title: 'Kisaran Harga',
-                      subtitle: price,
-                    ),
-                    const SizedBox(height: 25),
-                    _sectionTitle('Facilities'),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: facilities.map((fac) {
-                        return _facilityChip(_getFacilityIcon(fac), fac);
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 25),
-                    _sectionTitle('Menu & Prices'),
-                    const SizedBox(height: 10),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(18),
-                      decoration: _sectionDecoration(),
-                      child: const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('• Espresso / Americano: Rp25.000', style: TextStyle(color: brown, fontSize: 13)),
-                          SizedBox(height: 6),
-                          Text('• Caffe Latte / Cappuccino: Rp32.000', style: TextStyle(color: brown, fontSize: 13)),
-                          SizedBox(height: 6),
-                          Text('• Caramel Macchiato: Rp38.000', style: TextStyle(color: brown, fontSize: 13)),
-                          SizedBox(height: 6),
-                          Text('• Butter Croissant: Rp28.000', style: TextStyle(color: brown, fontSize: 13)),
-                        ],
-                      ),
-                    ),
+
                     const SizedBox(height: 25),
 
-                    _sectionTitle('Location'),
+                    // LOCATION: NO GREEN BOX, just address + View on Map button
+                    _sectionTitle('Lokasi'),
                     const SizedBox(height: 10),
-                    Container(
-                      height: 150,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: lightGreen,
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      child: const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.location_on_rounded,
-                            color: darkGreen,
-                            size: 45,
+                    Row(
+                      children: [
+                        const Icon(Icons.location_on_rounded, color: sage, size: 17),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            _cafeLocation,
+                            style: const TextStyle(color: brown, fontSize: 13),
                           ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Cafe Location',
-                            style: TextStyle(
-                              color: darkBrown,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      _cafeLocation,
-                      style: const TextStyle(
-                        color: brown,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 14),
                     SizedBox(
                       width: double.infinity,
                       height: 54,
                       child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        icon: const Icon(
-                          Icons.map_outlined,
-                        ),
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.map_outlined),
                         label: const Text('View on Map'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: darkGreen,
@@ -289,6 +269,30 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
     );
   }
 
+  Widget _photoPlaceholder() {
+    return Container(
+      height: 250,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: lightGreen,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset('assets/icons/new_app_icon.png', width: 70, height: 70, fit: BoxFit.contain),
+            const SizedBox(height: 10),
+            const Text('Cafe Photos', style: TextStyle(color: darkBrown, fontWeight: FontWeight.w600)),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _toggleBookmark() {
     SavedCafeStore.instance.toggleSaved(
       SavedCafe(
@@ -297,9 +301,7 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
         location: _cafeLocation,
       ),
     );
-
     setState(() {});
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -311,28 +313,18 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
     );
   }
 
-  Widget _circleButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-  }) {
+  Widget _circleButton({required IconData icon, required VoidCallback onPressed}) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
-          BoxShadow(
-            color: darkBrown.withOpacity(0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
+          BoxShadow(color: darkBrown.withOpacity(0.08), blurRadius: 8, offset: const Offset(0, 3)),
         ],
       ),
       child: IconButton(
         onPressed: onPressed,
-        icon: Icon(
-          icon,
-          color: darkBrown,
-        ),
+        icon: Icon(icon, color: darkBrown),
       ),
     );
   }
@@ -340,71 +332,27 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
   Widget _sectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 19,
-        fontWeight: FontWeight.bold,
-        color: darkBrown,
-      ),
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: darkBrown),
     );
   }
 
-  BoxDecoration _sectionDecoration() {
-    return BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(
-        color: const Color(0xFFEAEDE4),
-      ),
-    );
-  }
-
-  Widget _infoCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
+  Widget _compactInfoCard({required IconData icon, required String title, required String subtitle}) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(17),
-      decoration: _sectionDecoration(),
-      child: Row(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFEAEDE4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 45,
-            height: 45,
-            decoration: BoxDecoration(
-              color: lightGreen,
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Icon(
-              icon,
-              color: darkGreen,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 13),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: darkBrown,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: brown,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          Icon(icon, color: darkGreen, size: 20),
+          const SizedBox(height: 6),
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: darkBrown, fontSize: 12)),
+          const SizedBox(height: 3),
+          Text(subtitle, style: const TextStyle(fontSize: 11, color: brown), maxLines: 2, overflow: TextOverflow.ellipsis),
         ],
       ),
     );
@@ -417,42 +365,28 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
     if (lower.contains('park')) return Icons.local_parking_rounded;
     if (lower.contains('seat')) return Icons.event_seat_rounded;
     if (lower.contains('pet')) return Icons.pets_rounded;
+    if (lower.contains('work')) return Icons.work_outline_rounded;
+    if (lower.contains('study')) return Icons.school_outlined;
+    if (lower.contains('outdoor')) return Icons.park_outlined;
     return Icons.check_circle_outline_rounded;
   }
 
-  Widget _facilityChip(IconData icon, String label) {
+  Widget _facilityChipSmall(IconData icon, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 13,
-        vertical: 11,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         color: lightGreen,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFDCE4D3),
-        ),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFDCE4D3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: darkGreen,
-            size: 18,
-          ),
-          const SizedBox(width: 7),
-          Text(
-            label,
-            style: const TextStyle(
-              color: darkBrown,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          Icon(icon, color: darkGreen, size: 13),
+          const SizedBox(width: 4),
+          Text(label, style: const TextStyle(color: darkBrown, fontSize: 10, fontWeight: FontWeight.w500)),
         ],
       ),
     );
   }
-
 }

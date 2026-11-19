@@ -1,6 +1,7 @@
 class AiCafeRecommendation {
   final String? cafeId;
   final String name;
+  final String? area;
   final int matchScore;
   final String? reason;
   final List<String> highlights;
@@ -8,6 +9,7 @@ class AiCafeRecommendation {
   const AiCafeRecommendation({
     this.cafeId,
     required this.name,
+    this.area,
     required this.matchScore,
     this.reason,
     this.highlights = const [],
@@ -25,9 +27,15 @@ class AiCafeRecommendation {
       return [];
     }
 
+    // Backend returns cafe_name (from join), name (from raw), or name from list
+    final cafeName = json['cafe_name']?.toString() ??
+        json['name']?.toString() ??
+        'Recommended Cafe';
+
     return AiCafeRecommendation(
       cafeId: json['cafe_id']?.toString() ?? json['id']?.toString(),
-      name: json['name']?.toString() ?? 'Recommended Cafe',
+      name: cafeName,
+      area: json['area']?.toString(),
       matchScore: parseInt(json['match_score'] ?? json['match'], 90),
       reason: json['reason']?.toString(),
       highlights: parseList(json['highlights']),
@@ -54,7 +62,11 @@ class AiHistoryItem {
 
   factory AiHistoryItem.fromJson(Map<String, dynamic> json) {
     List<AiCafeRecommendation> recs = [];
-    if (json['recommendations'] is List) {
+    if (json['result'] is Map && json['result']['recommendations'] is List) {
+      recs = (json['result']['recommendations'] as List)
+          .map((r) => AiCafeRecommendation.fromJson(r as Map<String, dynamic>))
+          .toList();
+    } else if (json['recommendations'] is List) {
       recs = (json['recommendations'] as List)
           .map((r) => AiCafeRecommendation.fromJson(r as Map<String, dynamic>))
           .toList();
@@ -64,7 +76,7 @@ class AiHistoryItem {
       id: json['id']?.toString() ?? '',
       purpose: json['purpose']?.toString() ?? 'General',
       budget: json['budget']?.toString() ?? 'Any',
-      preferences: json['preferences']?.toString(),
+      preferences: json['preferences']?.toString() ?? json['details']?.toString(),
       recommendations: recs,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()

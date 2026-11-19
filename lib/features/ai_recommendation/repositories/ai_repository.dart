@@ -13,17 +13,39 @@ class AiRepository {
     String? details,
   }) async {
     try {
+      // Map UI labels to backend-accepted enum values
+      final purposeMap = {
+        'work': 'Work',
+        'study': 'Study',
+        'aesthetic': 'Aesthetic',
+        'pet friendly': 'Pet Friendly',
+      };
+      final budgetMap = {
+        '15k-30k': '15k-30k',
+        '30k-60k': '30k-60k',
+        '60k-80k': '60k-80k',
+        'more than 80k': '>80k',
+      };
+
+      final purposeKey = purpose.toLowerCase().trim();
+      final budgetKey = budget.toLowerCase().trim();
+
+      final mappedPurpose = purposeMap[purposeKey] ?? 'Work';
+      final mappedBudget = budgetMap[budgetKey] ?? '30k-60k';
+
       final response = await _api.post(
         '/ai/recommend',
         body: {
-          'purpose': purpose.toLowerCase(),
-          'budget': budget.toLowerCase(),
+          'purpose': mappedPurpose,
+          'budget': mappedBudget,
           if (details != null && details.isNotEmpty) 'preferences': details,
         },
       );
 
       if (response is Map<String, dynamic> && response['recommendations'] is List) {
-        return (response['recommendations'] as List)
+        final list = response['recommendations'] as List;
+        if (list.isEmpty) return [];
+        return list
             .map((item) => AiCafeRecommendation.fromJson(item as Map<String, dynamic>))
             .toList();
       } else if (response is List) {
@@ -31,9 +53,9 @@ class AiRepository {
             .map((item) => AiCafeRecommendation.fromJson(item as Map<String, dynamic>))
             .toList();
       }
-      return _defaultRecommendations();
-    } catch (_) {
-      return _defaultRecommendations();
+      return [];
+    } catch (e) {
+      rethrow;
     }
   }
 
@@ -49,31 +71,5 @@ class AiRepository {
     } catch (_) {
       return [];
     }
-  }
-
-  List<AiCafeRecommendation> _defaultRecommendations() {
-    return const [
-      AiCafeRecommendation(
-        cafeId: 'cafe-1',
-        name: 'First Coffee',
-        matchScore: 98,
-        reason: 'Cocok sekali untuk WFC dan meeting santai. Fasilitas Wi-Fi cepat dan colokan melimpah.',
-        highlights: ['Fast Wi-Fi', 'Power Outlets', 'Quiet Ambience'],
-      ),
-      AiCafeRecommendation(
-        cafeId: 'cafe-2',
-        name: 'Daily Brew',
-        matchScore: 94,
-        reason: 'Pilihan hemat dengan suasana aesthetic outdoor yang ramah hewan peliharaan.',
-        highlights: ['Budget Friendly', 'Aesthetic', 'Pet Friendly'],
-      ),
-      AiCafeRecommendation(
-        cafeId: 'cafe-3',
-        name: 'The Coffee Room',
-        matchScore: 89,
-        reason: 'Ruang kerja premium dengan kursi ergonomis dan parkiran luas.',
-        highlights: ['Spacious Parking', 'Indoor Seating', 'Work-friendly'],
-      ),
-    ];
   }
 }
