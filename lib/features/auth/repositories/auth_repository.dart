@@ -1,3 +1,4 @@
+import '../../../core/network/api_client.dart';
 import '../../../core/services/supabase_service.dart';
 
 class AuthRepository {
@@ -15,7 +16,6 @@ class AuthRepository {
     if (_supabase.isInitialized) {
       await _supabase.signInWithEmail(email: email, password: password);
     } else {
-      // Offline / unconfigured development mode: simulate sign in delay
       await Future.delayed(const Duration(milliseconds: 600));
     }
   }
@@ -26,15 +26,46 @@ class AuthRepository {
     required String name,
     required String username,
   }) async {
-    if (_supabase.isInitialized) {
+    bool registeredViaApi = false;
+
+    // 1. Prioritaskan registrasi via backend admin agar email terkonfirmasi langsung dan tersinkron ke public.users
+    try {
+      final res = await ApiClient.instance.post(
+        '/auth/register',
+        body: {
+          'email': email.trim(),
+          'password': password,
+          'full_name': name.trim(),
+          'username': username.trim().toLowerCase(),
+        },
+      );
+      if (res != null) {
+        registeredViaApi = true;
+      }
+    } catch (e) {
+      if (e is ApiException) {
+        throw Exception(e.message);
+      }
+      // Jika backend tidak dapat dihubungi, lanjutkan ke fallback Supabase langsung
+    }
+
+    // 2. Fallback jika backend offline
+    if (!registeredViaApi && _supabase.isInitialized) {
       await _supabase.signUp(
         email: email,
         password: password,
         name: name,
         username: username,
       );
-    } else {
-      await Future.delayed(const Duration(milliseconds: 600));
+    }
+
+    // 3. Login otomatis setelah daftar agar session & currentUser langsung aktif
+    if (_supabase.isInitialized) {
+      try {
+        await _supabase.signInWithEmail(email: email, password: password);
+      } catch (_) {
+        // Jika butuh konfirmasi email manual dari setting Supabase
+      }
     }
   }
 

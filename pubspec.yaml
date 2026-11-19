@@ -2,7 +2,7 @@ name: kopifinder
 description: "KopiFinder - Cafe Discovery App"
 publish_to: "none"
 
-version: 1.0.0+2
+version: 1.0.0+3
 
 environment:
   sdk: ^3.5.4
@@ -37,5 +37,5 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/icons/new_app_icon.png"
-  adaptive_icon_foreground: "assets/icons/new_app_icon_adaptive.png"
-  adaptive_icon_background: "#F9E7D0"
+  adaptive_icon_background: "assets/icons/new_app_icon_adaptive_bg.png"
+  adaptive_icon_foreground: "assets/icons/new_app_icon_adaptive_fg.png"
