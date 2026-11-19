@@ -2,6 +2,7 @@ import { Router } from 'express';
 import healthRouter from './health.routes';
 import syncRouter from './sync.routes';
 import usersRouter from './users.routes';
+import authRouter from './auth.routes';
 import catalogRouter from './catalog.routes';
 import engagementRouter from './engagement.routes';
 import communityRouter from './community.routes';
@@ -10,6 +11,7 @@ import aiRouter from './ai.routes';
 
 const apiRouter = Router();
 
+apiRouter.use('/auth', authRouter);
 apiRouter.use('/health', healthRouter);
 apiRouter.use('/sync', syncRouter);
 apiRouter.use('/users', usersRouter);
