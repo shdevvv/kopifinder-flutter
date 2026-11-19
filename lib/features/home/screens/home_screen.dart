@@ -210,21 +210,47 @@ class _HomeScreenState extends State<HomeScreen> {
                 // ── HEADER: Logo + Location + Bookmark ──────────────────
                 Row(
                   children: [
-                    // KopiFinder logo
+                    // 3D Papercut Medallion Logo (exact match with brand medal)
                     Container(
-                      width: 50,
-                      height: 50,
+                      width: 54,
+                      height: 54,
                       decoration: BoxDecoration(
-                        color: lightGreen,
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFDCE4D3)),
+                        color: const Color(0xFFEBDDCB),
+                        border: Border.all(color: const Color(0xFFD5C4B1), width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF382317).withOpacity(0.18),
+                            offset: const Offset(0, 3),
+                            blurRadius: 4,
+                          ),
+                        ],
                       ),
-                      child: ClipOval(
-                        child: Image.asset(
-                          'assets/icon/no_text_logo.png',
-                          width: 50,
-                          height: 50,
-                          fit: BoxFit.cover,
+                      child: Center(
+                        child: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFFF3F7F2),
+                            border: Border.all(color: const Color(0xFF8DBA20), width: 1.5),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.white,
+                                offset: Offset(0, -1),
+                                blurRadius: 0,
+                              ),
+                            ],
+                          ),
+                          child: ClipOval(
+                            child: Padding(
+                              padding: const EdgeInsets.all(4),
+                              child: Image.asset(
+                                'assets/icon/no_text_logo.png',
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),

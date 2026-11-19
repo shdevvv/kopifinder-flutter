@@ -460,20 +460,47 @@ class CommunityScreenState extends State<CommunityScreen> {
               ),
               child: Row(
                 children: [
+                  // 3D Papercut Medallion Logo
                   Container(
-                    width: 55,
-                    height: 55,
+                    width: 54,
+                    height: 54,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(18),
+                      shape: BoxShape.circle,
+                      color: const Color(0xFFEBDDCB),
+                      border: Border.all(color: const Color(0xFFD5C4B1), width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF382317).withOpacity(0.18),
+                          offset: const Offset(0, 3),
+                          blurRadius: 4,
+                        ),
+                      ],
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: Image.asset(
-                        'assets/icons/new_app_icon.png',
-                        width: 55,
-                        height: 55,
-                        fit: BoxFit.cover,
+                    child: Center(
+                      child: Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: const Color(0xFFF3F7F2),
+                          border: Border.all(color: const Color(0xFF8DBA20), width: 1.5),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.white,
+                              offset: Offset(0, -1),
+                              blurRadius: 0,
+                            ),
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Image.asset(
+                              'assets/icon/no_text_logo.png',
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),

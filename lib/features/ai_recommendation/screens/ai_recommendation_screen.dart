@@ -3,19 +3,22 @@ import '../../../core/widgets/state_widgets.dart';
 import '../models/ai_recommendation_models.dart';
 import '../repositories/ai_repository.dart';
 
-// ── 3D Papercut Palette: Milk Chocolate, Emerald-Olive, Light Cream, Pure White ──
-const Color _bgCream = Color(0xFFFAF7F2);        // Light airy cream background
-const Color _cardCream = Color(0xFFF4EDE2);      // Secondary warm cream card
+// ── 3D Papercut Palette: Warm Cardboard (#CFAC97), Olive/Lime Greens, Cream, Pure White ──
+const Color _bgWall = Color(0xFFCFAC97);         // Requested background wall color
+const Color _cardCream = Color(0xFFF7F2E9);      // Warm cream inner paper
 const Color _whitePaper = Color(0xFFFFFFFF);     // Pure clean white paper
-const Color _chocolateDark = Color(0xFF3F2B20);  // Dark milk chocolate text
-const Color _chocolateMid = Color(0xFF75513D);   // Milk chocolate medium
-const Color _chocolateLatte = Color(0xFFA17C64); // Latte chocolate tone
-const Color _chocolatePaper = Color(0xFFD4C1B0); // Paper shadow tan
-const Color _emeraldOlive = Color(0xFF2E6548);   // Olive leaning towards emerald
-const Color _emeraldDark = Color(0xFF1B422E);    // Dark emerald shadow
-const Color _emeraldLight = Color(0xFFE2EFE7);   // Light emerald paper tint
-const Color _emeraldMint = Color(0xFF458C67);    // Mid emerald highlight
-const Color _mutedText = Color(0xFF8A776A);      // Soft readable caption text
+const Color _chocolateDark = Color(0xFF382317);  // Dark milk chocolate text
+const Color _chocolateMid = Color(0xFF6B4C38);   // Milk chocolate medium
+const Color _chocolateLatte = Color(0xFF9E7C66); // Latte chocolate tone
+const Color _chocolateShadow = Color(0xFFAD8C78);// 3D paper shadow layer
+
+// Requested Greens
+const Color _greenPrimary = Color(0xFF526B0C);   // #526B0C deep rich olive
+const Color _greenVibrant = Color(0xFF8DBA20);   // #8DBA20 vibrant olive lime
+const Color _greenLight = Color(0xFFA5C943);     // #A5C943 light lime olive
+const Color _greenDarkShadow = Color(0xFF364807);// Bottom drop shelf for green
+const Color _greenPaperTint = Color(0xFFF0F6E4); // Soft paper tint for tags
+const Color _mutedText = Color(0xFF7A6557);      // Soft readable caption text
 
 class AiRecommendationScreen extends StatefulWidget {
   final VoidCallback onOpenMap;
@@ -124,15 +127,15 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
   Widget _build3DPaperCard({
     required Widget child,
     Color paperColor = _whitePaper,
-    Color shadowLayerColor = _chocolatePaper,
-    Color borderColor = const Color(0xFFE8DDCE),
+    Color shadowLayerColor = _chocolateShadow,
+    Color borderColor = const Color(0xFFE2D4C5),
     double elevation = 5.0,
     EdgeInsetsGeometry padding = const EdgeInsets.all(18),
   }) {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // Bottom paper layer (gives the 3D cut cardstock feel)
+        // Bottom paper shadow layer (gives true 3D cutout depth against #CFAC97)
         Positioned(
           left: 4,
           top: elevation,
@@ -155,15 +158,15 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
             borderRadius: BorderRadius.circular(22),
             border: Border.all(color: borderColor, width: 1.8),
             boxShadow: [
-              // Sharp paper cut edge highlight
+              // Sharp paper cut edge top highlight
               const BoxShadow(
                 color: Colors.white,
                 offset: Offset(0, -1),
                 blurRadius: 0,
               ),
-              // Soft ambient depth
+              // Soft ambient drop
               BoxShadow(
-                color: _chocolateDark.withOpacity(0.06),
+                color: _chocolateDark.withOpacity(0.08),
                 offset: const Offset(0, 4),
                 blurRadius: 10,
               ),
@@ -199,7 +202,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
               child: Container(
                 height: 38,
                 decoration: BoxDecoration(
-                  color: isSelected ? _emeraldDark : _chocolatePaper,
+                  color: isSelected ? _greenDarkShadow : _chocolateShadow,
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
@@ -208,15 +211,15 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
               decoration: BoxDecoration(
-                color: isSelected ? _emeraldOlive : _whitePaper,
+                color: isSelected ? _greenPrimary : _whitePaper,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: isSelected ? _emeraldMint : const Color(0xFFE4D9CA),
+                  color: isSelected ? _greenLight : const Color(0xFFE2D6C6),
                   width: 1.6,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.white.withOpacity(isSelected ? 0.2 : 0.9),
+                    color: Colors.white.withOpacity(isSelected ? 0.25 : 0.9),
                     offset: const Offset(0, -1),
                     blurRadius: 0,
                   ),
@@ -229,7 +232,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                     Icon(
                       icon,
                       size: 15,
-                      color: isSelected ? _whitePaper : _emeraldOlive,
+                      color: isSelected ? _whitePaper : _greenPrimary,
                     ),
                     const SizedBox(width: 7),
                   ],
@@ -297,7 +300,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
           bottom: -6,
           child: Container(
             decoration: BoxDecoration(
-              color: _chocolatePaper,
+              color: _chocolateShadow,
               borderRadius: BorderRadius.circular(26),
             ),
           ),
@@ -305,133 +308,118 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
         // Main hero card in pure white paper
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(22),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
           decoration: BoxDecoration(
             color: _whitePaper,
             borderRadius: BorderRadius.circular(26),
-            border: Border.all(color: const Color(0xFFE6DCce), width: 2),
+            border: Border.all(color: const Color(0xFFE2D4C5), width: 2),
             boxShadow: [
               BoxShadow(
-                color: _chocolateDark.withOpacity(0.06),
+                color: _chocolateDark.withOpacity(0.08),
                 offset: const Offset(0, 8),
                 blurRadius: 18,
               ),
             ],
           ),
-          child: Stack(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Decorative 3D Paper Cutout Circles / Elements (Top Right)
-              Positioned(
-                right: -6,
-                top: -6,
-                child: SizedBox(
-                  width: 90,
-                  height: 90,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Layer 1: Milk chocolate paper disc
-                      Container(
-                        width: 82,
-                        height: 82,
-                        decoration: BoxDecoration(
-                          color: _cardCream,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: _chocolatePaper, width: 1.5),
-                        ),
+              // Hero Text Content (Expanded left side)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Hero Title
+                    const Text(
+                      'Discover Your\nPerfect Cafe ☕',
+                      style: TextStyle(
+                        fontSize: 25,
+                        fontWeight: FontWeight.w900,
+                        color: _chocolateDark,
+                        height: 1.2,
+                        letterSpacing: -0.4,
                       ),
-                      // Layer 2: Circle containing no_text_logo
-                      Container(
-                        width: 62,
-                        height: 62,
-                        decoration: BoxDecoration(
-                          color: _whitePaper,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: _emeraldMint.withOpacity(0.5), width: 1.5),
-                        ),
-                        child: ClipOval(
-                          child: Padding(
-                            padding: const EdgeInsets.all(5),
-                            child: Image.asset(
-                              'assets/icon/no_text_logo.png',
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Decorative milk-chocolate paper divider line
+                    Container(
+                      width: 48,
+                      height: 3.5,
+                      decoration: BoxDecoration(
+                        color: _greenLight,
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                    ],
-                  ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Hero Subtitle
+                    const Text(
+                      'Tell us your vibe and our AI will hand-pick the finest coffee spots across Jakarta for you.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _mutedText,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
-              // Hero Text Content
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Papercraft Badge Tag
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: _emeraldLight,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: _emeraldOlive.withOpacity(0.3), width: 1.2),
+              const SizedBox(width: 14),
+
+              // Full Round 3D Papercut Medal (Top Right - NOT CLIPPED, 100% round)
+              Container(
+                width: 78,
+                height: 78,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _cardCream,
+                  border: Border.all(color: _chocolateShadow, width: 1.8),
+                  boxShadow: [
+                    // 3D paper bottom shelf
+                    BoxShadow(
+                      color: _chocolateDark.withOpacity(0.18),
+                      offset: const Offset(0, 4),
+                      blurRadius: 0,
                     ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.auto_awesome_rounded, size: 12, color: _emeraldOlive),
-                        SizedBox(width: 5),
-                        Text(
-                          '3D AI CAFE CURATOR',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: _emeraldOlive,
-                            letterSpacing: 1.1,
-                          ),
+                    // Ambient blur
+                    BoxShadow(
+                      color: _chocolateDark.withOpacity(0.08),
+                      offset: const Offset(0, 6),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _whitePaper,
+                      border: Border.all(color: _greenLight, width: 1.8),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.white,
+                          offset: Offset(0, -1),
+                          blurRadius: 0,
                         ),
                       ],
                     ),
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  // Hero Title
-                  const Text(
-                    'Discover Your\nPerfect Cafe ☕',
-                    style: TextStyle(
-                      fontSize: 27,
-                      fontWeight: FontWeight.w900,
-                      color: _chocolateDark,
-                      height: 1.2,
-                      letterSpacing: -0.4,
+                    child: ClipOval(
+                      child: Padding(
+                        padding: const EdgeInsets.all(5),
+                        child: Image.asset(
+                          'assets/icon/no_text_logo.png',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
                     ),
                   ),
-
-                  const SizedBox(height: 10),
-
-                  // Decorative milk-chocolate paper divider line
-                  Container(
-                    width: 48,
-                    height: 3.5,
-                    decoration: BoxDecoration(
-                      color: _chocolateLatte,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // Hero Subtitle
-                  const Text(
-                    'Tell us your vibe and our AI will hand-pick\nthe finest coffee spots across Jakarta for you.',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      color: _mutedText,
-                      height: 1.55,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
           ),
@@ -449,14 +437,21 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
     return Row(
       children: [
         Container(
-          width: 32,
-          height: 32,
+          width: 34,
+          height: 34,
           decoration: BoxDecoration(
-            color: _emeraldLight,
+            color: _greenPaperTint,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: _emeraldOlive.withOpacity(0.25), width: 1.2),
+            border: Border.all(color: _greenLight, width: 1.4),
+            boxShadow: [
+              BoxShadow(
+                color: _greenPrimary.withOpacity(0.15),
+                offset: const Offset(0, 2),
+                blurRadius: 0,
+              ),
+            ],
           ),
-          child: Icon(icon, size: 17, color: _emeraldOlive),
+          child: Icon(icon, size: 18, color: _greenPrimary),
         ),
         const SizedBox(width: 10),
         Column(
@@ -502,7 +497,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
               bottom: -5,
               child: Container(
                 decoration: BoxDecoration(
-                  color: _chocolatePaper,
+                  color: _chocolateShadow,
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),
@@ -515,10 +510,10 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
               decoration: BoxDecoration(
                 color: _whitePaper,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFE8DCCF), width: 1.8),
+                border: Border.all(color: const Color(0xFFE2D4C5), width: 1.8),
                 boxShadow: [
                   BoxShadow(
-                    color: _chocolateDark.withOpacity(0.06),
+                    color: _chocolateDark.withOpacity(0.08),
                     offset: const Offset(0, 4),
                     blurRadius: 12,
                   ),
@@ -536,12 +531,12 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: _emeraldOlive,
+                          color: _greenPrimary,
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: _emeraldMint, width: 1.5),
+                          border: Border.all(color: _greenVibrant, width: 1.5),
                           boxShadow: const [
                             BoxShadow(
-                              color: _emeraldDark,
+                              color: _greenDarkShadow,
                               offset: Offset(0, 3),
                               blurRadius: 0,
                             ),
@@ -578,7 +573,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                                   const Icon(
                                     Icons.location_on_rounded,
                                     size: 13,
-                                    color: _emeraldOlive,
+                                    color: _greenPrimary,
                                   ),
                                   const SizedBox(width: 3),
                                   Text(
@@ -599,12 +594,12 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: _emeraldLight,
+                          color: _greenPaperTint,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: _emeraldOlive, width: 1.4),
+                          border: Border.all(color: _greenPrimary, width: 1.4),
                           boxShadow: [
                             BoxShadow(
-                              color: _emeraldOlive.withOpacity(0.2),
+                              color: _greenPrimary.withOpacity(0.2),
                               offset: const Offset(0, 2),
                               blurRadius: 0,
                             ),
@@ -616,13 +611,13 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                             const Icon(
                               Icons.auto_awesome_rounded,
                               size: 11,
-                              color: _emeraldOlive,
+                              color: _greenPrimary,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               '${cafe.matchScore}% Match',
                               style: const TextStyle(
-                                color: _emeraldOlive,
+                                color: _greenPrimary,
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -640,9 +635,9 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
                       decoration: BoxDecoration(
-                        color: _bgCream,
+                        color: _cardCream,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFE8DDCF), width: 1.2),
+                        border: Border.all(color: const Color(0xFFE2D4C5), width: 1.2),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -678,16 +673,16 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                         return Container(
                           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                           decoration: BoxDecoration(
-                            color: _emeraldLight,
+                            color: _greenPaperTint,
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: _emeraldOlive.withOpacity(0.2)),
+                            border: Border.all(color: _greenLight.withOpacity(0.5)),
                           ),
                           child: Text(
                             tag,
                             style: const TextStyle(
                               fontSize: 10.5,
                               fontWeight: FontWeight.w600,
-                              color: _emeraldOlive,
+                              color: _greenPrimary,
                             ),
                           ),
                         );
@@ -711,7 +706,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                           child: Container(
                             height: 42,
                             decoration: BoxDecoration(
-                              color: _emeraldDark,
+                              color: _greenDarkShadow,
                               borderRadius: BorderRadius.circular(13),
                             ),
                           ),
@@ -721,9 +716,9 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                           width: double.infinity,
                           height: 42,
                           decoration: BoxDecoration(
-                            color: _emeraldOlive,
+                            color: _greenPrimary,
                             borderRadius: BorderRadius.circular(13),
-                            border: Border.all(color: _emeraldMint, width: 1.4),
+                            border: Border.all(color: _greenLight, width: 1.4),
                           ),
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -757,7 +752,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bgCream,
+      backgroundColor: _bgWall,
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -768,7 +763,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
               // ── 1. Hero Banner ────────────────────────────────────────────
               _buildHeroBanner(),
 
-              const SizedBox(height: 22),
+              const SizedBox(height: 20),
 
               // ── 2. Purpose Card (Single Row Chips) ────────────────────────
               _build3DPaperCard(
@@ -844,19 +839,19 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                           height: 1.5,
                         ),
                         filled: true,
-                        fillColor: _bgCream,
+                        fillColor: _cardCream,
                         contentPadding: const EdgeInsets.all(14),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: Color(0xFFE4D9CA), width: 1.5),
+                          borderSide: const BorderSide(color: Color(0xFFE2D6C6), width: 1.5),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: Color(0xFFE4D9CA), width: 1.5),
+                          borderSide: const BorderSide(color: Color(0xFFE2D6C6), width: 1.5),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: _emeraldOlive, width: 1.8),
+                          borderSide: const BorderSide(color: _greenPrimary, width: 1.8),
                         ),
                       ),
                     ),
@@ -864,7 +859,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 22),
 
               // ── 5. Big 3D Papercraft Submit Button ("Find My Cafe! ✦") ─────
               GestureDetector(
@@ -880,7 +875,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                       child: Container(
                         height: 54,
                         decoration: BoxDecoration(
-                          color: _emeraldDark,
+                          color: _greenDarkShadow,
                           borderRadius: BorderRadius.circular(18),
                         ),
                       ),
@@ -890,12 +885,12 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                       width: double.infinity,
                       height: 54,
                       decoration: BoxDecoration(
-                        color: _emeraldOlive,
+                        color: _greenPrimary,
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: _emeraldMint, width: 1.8),
+                        border: Border.all(color: _greenVibrant, width: 1.8),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withOpacity(0.25),
                             offset: const Offset(0, -1),
                             blurRadius: 0,
                           ),

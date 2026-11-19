@@ -311,7 +311,7 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset('assets/icons/new_app_icon.png', width: 70, height: 70, fit: BoxFit.contain),
+            Image.asset('assets/icon/no_text_logo.png', width: 70, height: 70, fit: BoxFit.contain),
             const SizedBox(height: 10),
             const Text('Cafe Photos', style: TextStyle(color: darkBrown, fontWeight: FontWeight.w600)),
           ],
