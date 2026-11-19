@@ -62,10 +62,10 @@ class UserStats {
     }
 
     return UserStats(
-      reviewsCount: parseInt(json['reviews_count']),
-      bookmarksCount: parseInt(json['bookmarks_count'] ?? json['saved_cafes_count']),
-      postsCount: parseInt(json['posts_count']),
-      commentsCount: parseInt(json['comments_count']),
+      reviewsCount: parseInt(json['reviews_count'] ?? json['reviews']),
+      bookmarksCount: parseInt(json['bookmarks_count'] ?? json['saved_cafes_count'] ?? json['saved_cafes'] ?? json['saved']),
+      postsCount: parseInt(json['posts_count'] ?? json['posts']),
+      commentsCount: parseInt(json['comments_count'] ?? json['comments']),
     );
   }
 }

@@ -8,10 +8,10 @@ class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  State<ProfileScreen> createState() => ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class ProfileScreenState extends State<ProfileScreen> {
   static const cream = Color(0xFFFAF7F0);
   static const lightGreen = Color(0xFFE8EDDF);
   static const sage = Color(0xFF9AAA83);
@@ -19,8 +19,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   static const brown = Color(0xFF795548);
   static const darkBrown = Color(0xFF4E342E);
 
-  String userName = 'Coffee Lover';
-  String username = '@coffeelover';
+  String userName = 'Stephanie';
+  String username = '@stephanieee';
   String location = 'Jakarta, Indonesia';
   UserStats _stats = const UserStats();
   // ignore: unused_field
@@ -31,6 +31,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     _loadProfile();
   }
+
+  void reload() => _loadProfile();
 
   Future<void> _loadProfile() async {
     try {
@@ -46,7 +48,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() {
           userName = profile.fullName;
           username = profile.username.startsWith('@') ? profile.username : '@${profile.username}';
-          location = profile.location;
+          location = 'Jakarta, Indonesia';
           _stats = stats;
           _isLoading = false;
         });
@@ -58,15 +60,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void editProfile() {
+  Future<void> editProfile() async {
     final nameController = TextEditingController(text: userName);
     final usernameController = TextEditingController(
       text: username.startsWith('@') ? username.substring(1) : username,
     );
-    final locationController = TextEditingController(text: location);
 
-    showDialog(
+    final result = await showDialog<Map<String, String>>(
       context: context,
+      useRootNavigator: true,
       builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: cream,
@@ -86,7 +88,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 _buildEditField(
                   controller: nameController,
-                  label: 'Nama pengguna',
+                  label: 'Nama lengkap',
                   icon: Icons.person_outline_rounded,
                 ),
                 const SizedBox(height: 15),
@@ -94,12 +96,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   controller: usernameController,
                   label: 'Username',
                   icon: Icons.alternate_email_rounded,
-                ),
-                const SizedBox(height: 15),
-                _buildEditField(
-                  controller: locationController,
-                  label: 'Lokasi',
-                  icon: Icons.location_on_outlined,
                 ),
               ],
             ),
@@ -112,9 +108,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-              },
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text(
                 'Batal',
                 style: TextStyle(
@@ -132,37 +126,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              onPressed: () async {
+              onPressed: () {
                 final newName = nameController.text.trim();
                 final newUsername = usernameController.text.trim();
-                final newLocation = locationController.text.trim();
-
-                Navigator.pop(dialogContext);
-
-                setState(() {
-                  userName = newName;
-                  username = '@$newUsername';
-                  location = newLocation;
+                Navigator.of(dialogContext).pop({
+                  'name': newName,
+                  'username': newUsername,
                 });
-
-                try {
-                  await UserRepository.instance.updateProfile(
-                    fullName: newName,
-                    username: newUsername,
-                    location: newLocation,
-                  );
-                } catch (_) {}
               },
               child: const Text('Simpan'),
             ),
           ],
         );
       },
-    ).then((_) {
-      nameController.dispose();
-      usernameController.dispose();
-      locationController.dispose();
-    });
+    );
+
+    nameController.dispose();
+    usernameController.dispose();
+
+    if (result != null && mounted) {
+      final newName = result['name'] ?? '';
+      final newUsername = result['username'] ?? '';
+      if (newName.isNotEmpty) {
+        setState(() {
+          userName = newName;
+          if (newUsername.isNotEmpty) {
+            username = '@$newUsername';
+          }
+        });
+
+        try {
+          await UserRepository.instance.updateProfile(
+            fullName: newName,
+            username: newUsername.isNotEmpty ? newUsername : username.replaceAll('@', ''),
+          );
+          if (mounted) {
+            await _loadProfile();
+          }
+        } catch (_) {}
+      }
+    }
   }
 
   Widget _buildEditField({
@@ -202,9 +205,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void logout() {
-    showDialog(
+  Future<void> logout() async {
+    final confirmed = await showDialog<bool>(
       context: context,
+      useRootNavigator: true,
       builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: cream,
@@ -227,25 +231,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-              },
+              onPressed: () => Navigator.of(dialogContext).pop(false),
               child: const Text(
                 'Batal',
                 style: TextStyle(color: brown),
               ),
             ),
             TextButton(
-              onPressed: () async {
-                Navigator.pop(dialogContext);
-                await AuthRepository.instance.signOut();
-                if (!mounted) return;
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SignInScreen()),
-                  (route) => false,
-                );
-              },
+              onPressed: () => Navigator.of(dialogContext).pop(true),
               child: const Text(
                 'Log Out',
                 style: TextStyle(
@@ -258,6 +251,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       },
     );
+
+    if (confirmed == true && mounted) {
+      await AuthRepository.instance.signOut();
+      if (!mounted) return;
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const SignInScreen()),
+        (route) => false,
+      );
+    }
   }
 
   @override
@@ -277,12 +280,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+      body: RefreshIndicator(
+        color: darkGreen,
+        backgroundColor: cream,
+        onRefresh: _loadProfile,
+        child: Center(
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
               // PROFILE PHOTO
               Container(
                 padding: const EdgeInsets.all(7),
@@ -366,12 +374,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               // STATS ROW
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildStatItem('Ulasan', _stats.reviewsCount),
-                  Container(width: 1, height: 35, color: const Color(0xFFDCE4D3)),
                   _buildStatItem('Disimpan', _stats.bookmarksCount),
+                  const SizedBox(width: 45),
                   Container(width: 1, height: 35, color: const Color(0xFFDCE4D3)),
+                  const SizedBox(width: 45),
                   _buildStatItem('Postingan', _stats.postsCount),
                 ],
               ),
@@ -441,8 +449,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildStatItem(String label, int count) {
     return Column(

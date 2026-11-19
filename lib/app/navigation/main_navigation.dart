@@ -15,6 +15,8 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
+  final GlobalKey<CommunityScreenState> _communityKey = GlobalKey<CommunityScreenState>();
+  final GlobalKey<ProfileScreenState> _profileKey = GlobalKey<ProfileScreenState>();
 
   // Membuka halaman Map dari AI Recommendation
   void _openMap() {
@@ -28,8 +30,8 @@ class _MainNavigationState extends State<MainNavigation> {
     const HomeScreen(),
     const MapScreen(),
     AiRecommendationScreen(onOpenMap: _openMap),
-    const CommunityScreen(),
-    const ProfileScreen(),
+    CommunityScreen(key: _communityKey),
+    ProfileScreen(key: _profileKey),
   ];
 
   @override
@@ -54,6 +56,11 @@ class _MainNavigationState extends State<MainNavigation> {
           setState(() {
             _currentIndex = index;
           });
+          if (index == 3) {
+            _communityKey.currentState?.reload();
+          } else if (index == 4) {
+            _profileKey.currentState?.reload();
+          }
         },
         items: const [
           BottomNavigationBarItem(

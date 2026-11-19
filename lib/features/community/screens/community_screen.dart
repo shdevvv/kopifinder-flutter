@@ -14,10 +14,10 @@ class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
 
   @override
-  State<CommunityScreen> createState() => _CommunityScreenState();
+  State<CommunityScreen> createState() => CommunityScreenState();
 }
 
-class _CommunityScreenState extends State<CommunityScreen> {
+class CommunityScreenState extends State<CommunityScreen> {
   static const cream = Color(0xFFFAF7F0);
   static const lightGreen = Color(0xFFE8EDDF);
   static const sage = Color(0xFF9AAA83);
@@ -34,6 +34,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
     super.initState();
     _loadPosts();
   }
+
+  void reload() => _loadPosts();
 
   Future<void> _loadPosts() async {
     setState(() {
@@ -86,6 +88,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
   Future<void> openCreatePost() async {
     final result = await showModalBottomSheet<CommunityPost>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
@@ -95,21 +98,27 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
     if (!mounted || result == null) return;
 
-    setState(() {
-      posts.insert(0, result);
-    });
-
-    // Also persist via repository
     try {
-      await CommunityRepository.instance.createPost(
+      final createdPost = await CommunityRepository.instance.createPost(
         caption: result.caption,
       );
-    } catch (_) {}
+      if (mounted) {
+        setState(() {
+          posts.insert(0, createdPost);
+        });
+        await _loadPosts();
+      }
+    } catch (_) {
+      if (mounted) {
+        await _loadPosts();
+      }
+    }
   }
 
   Future<void> openComments(CommunityPost post) async {
     await showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
@@ -476,8 +485,8 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
     }
 
     final post = CommunityPost(
-      name: 'You',
-      location: 'Senopati, Jakarta',
+      name: 'Stephanie',
+      location: 'Jakarta',
       caption: caption,
       image: selectedImage,
     );

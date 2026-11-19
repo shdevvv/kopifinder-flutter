@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/services/supabase_service.dart';
 
 // ==========================================
 // SAVED CAFE MODEL
@@ -34,6 +35,9 @@ class SavedCafe {
     if (json['cafe'] is Map) {
       name = json['cafe']['name']?.toString() ?? name;
       location = json['cafe']['address']?.toString() ?? json['cafe']['location']?.toString() ?? location;
+    } else if (json['cafes'] is Map) {
+      name = json['cafes']['name']?.toString() ?? name;
+      location = json['cafes']['address']?.toString() ?? json['cafes']['location']?.toString() ?? location;
     } else if (json['name'] != null) {
       name = json['name'].toString();
       location = json['location']?.toString() ?? json['address']?.toString() ?? location;
@@ -87,6 +91,27 @@ class SavedCafeStore extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
+    final sb = SupabaseService.instance;
+    final currentUser = sb.currentUser;
+
+    if (sb.isInitialized && currentUser != null && sb.client != null) {
+      try {
+        final data = await sb.client!
+            .from('saved_cafes')
+            .select('id,cafe_id,saved_at,cafes(id,name,address,photos)')
+            .eq('user_id', currentUser.id);
+        if (data.isNotEmpty) {
+          _savedCafes.clear();
+          for (final item in data) {
+            _savedCafes.add(SavedCafe.fromJson(item));
+          }
+          _isLoading = false;
+          notifyListeners();
+          return;
+        }
+      } catch (_) {}
+    }
+
     try {
       final response = await ApiClient.instance.get('/saved-cafes');
       if (response is List) {
@@ -108,12 +133,20 @@ class SavedCafeStore extends ChangeNotifier {
 
   Future<void> toggleSaved(SavedCafe cafe) async {
     final alreadySaved = isSaved(cafe.name);
+    final sb = SupabaseService.instance;
+    final currentUser = sb.currentUser;
 
     if (alreadySaved) {
       _savedCafes.removeWhere(
         (item) => item.name.trim().toLowerCase() == cafe.name.trim().toLowerCase(),
       );
       notifyListeners();
+
+      if (sb.isInitialized && currentUser != null && cafe.cafeId != null && cafe.cafeId!.isNotEmpty) {
+        try {
+          await sb.client!.from('saved_cafes').delete().eq('user_id', currentUser.id).eq('cafe_id', cafe.cafeId!);
+        } catch (_) {}
+      }
 
       try {
         if (cafe.cafeId != null && cafe.cafeId!.isNotEmpty) {
@@ -123,6 +156,15 @@ class SavedCafeStore extends ChangeNotifier {
     } else {
       _savedCafes.add(cafe);
       notifyListeners();
+
+      if (sb.isInitialized && currentUser != null && cafe.cafeId != null && cafe.cafeId!.isNotEmpty) {
+        try {
+          await sb.client!.from('saved_cafes').upsert({
+            'user_id': currentUser.id,
+            'cafe_id': cafe.cafeId!,
+          }, onConflict: 'user_id,cafe_id');
+        } catch (_) {}
+      }
 
       try {
         if (cafe.cafeId != null && cafe.cafeId!.isNotEmpty) {
@@ -142,6 +184,14 @@ class SavedCafeStore extends ChangeNotifier {
       (cafe) => cafe.name.trim().toLowerCase() == cafeName.trim().toLowerCase(),
     );
     notifyListeners();
+
+    final sb = SupabaseService.instance;
+    final currentUser = sb.currentUser;
+    if (sb.isInitialized && currentUser != null && target.cafeId != null && target.cafeId!.isNotEmpty) {
+      try {
+        await sb.client!.from('saved_cafes').delete().eq('user_id', currentUser.id).eq('cafe_id', target.cafeId!);
+      } catch (_) {}
+    }
 
     if (target.cafeId != null && target.cafeId!.isNotEmpty) {
       try {
