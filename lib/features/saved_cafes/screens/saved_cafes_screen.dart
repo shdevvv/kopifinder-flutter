@@ -372,7 +372,7 @@ class _SavedCafesScreenState extends State<SavedCafesScreen> {
                                 'View details →',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: _bgWall,
+                                  color: _chocolateDark,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
@@ -417,7 +417,7 @@ class _SavedCafesScreenState extends State<SavedCafesScreen> {
                         ),
                         child: const Icon(
                           Icons.bookmark_rounded,
-                          color: _bgWall,
+                          color: _chocolateDark,
                           size: 22,
                         ),
                       ),
