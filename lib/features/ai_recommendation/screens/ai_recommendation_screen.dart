@@ -340,21 +340,24 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                           border: Border.all(color: _chocolatePaper, width: 1.5),
                         ),
                       ),
-                      // Layer 2: Emerald-olive disc
+                      // Layer 2: Circle containing no_text_logo
                       Container(
-                        width: 58,
-                        height: 58,
+                        width: 62,
+                        height: 62,
                         decoration: BoxDecoration(
-                          color: _emeraldLight,
+                          color: _whitePaper,
                           shape: BoxShape.circle,
-                          border: Border.all(color: _emeraldMint.withOpacity(0.4), width: 1.5),
+                          border: Border.all(color: _emeraldMint.withOpacity(0.5), width: 1.5),
                         ),
-                      ),
-                      // Layer 3: Coffee icon paper stamp
-                      const Icon(
-                        Icons.coffee_rounded,
-                        color: _emeraldOlive,
-                        size: 28,
+                        child: ClipOval(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Image.asset(
+                              'assets/icon/no_text_logo.png',
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -942,42 +945,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
 
               // ── 6. Results Section ────────────────────────────────────────
               if (showResults) ...[
-                const SizedBox(height: 34),
-
-                // Results Header
-                Row(
-                  children: [
-                    Container(
-                      width: 5,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        color: _emeraldOlive,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Text(
-                      'Handpicked For You ✨',
-                      style: TextStyle(
-                        fontSize: 19,
-                        fontWeight: FontWeight.w800,
-                        color: _chocolateDark,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                const Padding(
-                  padding: EdgeInsets.only(left: 15),
-                  child: Text(
-                    'Curated by AI based on your preferences',
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      color: _mutedText,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 24),
 
                 if (_isLoading)
                   const Padding(
