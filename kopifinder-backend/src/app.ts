@@ -25,7 +25,7 @@ export const createApp = (): Express => {
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
   // Root Info Route
-  app.get('/', (_req: Request, res: Response) => {
+  app.get(['/', '/api', '/api/'], (_req: Request, res: Response) => {
     res.json({
       name: 'KopiFinder API',
       status: 'online',
