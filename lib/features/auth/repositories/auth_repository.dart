@@ -1,5 +1,6 @@
 import '../../../core/network/api_client.dart';
 import '../../../core/services/supabase_service.dart';
+import '../../saved_cafes/models/saved_cafe.dart';
 
 class AuthRepository {
   AuthRepository._();
@@ -70,6 +71,7 @@ class AuthRepository {
   }
 
   Future<void> signOut() async {
+    SavedCafeStore.instance.clearOnLogout();
     await _supabase.signOut();
   }
 

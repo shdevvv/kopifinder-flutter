@@ -86,6 +86,14 @@ class SavedCafeStore extends ChangeNotifier {
     );
   }
 
+  /// Call this on logout to clear in-memory cache.
+  void clearOnLogout() {
+    _savedCafes.clear();
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
+
   Future<void> fetchSavedCafes() async {
     _isLoading = true;
     _errorMessage = null;

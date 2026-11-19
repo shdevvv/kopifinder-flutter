@@ -51,6 +51,22 @@ router.post('/posts', requireAuth, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+router.patch('/posts/:id', requireAuth, async (req, res, next) => {
+  try {
+    const id = parse(uuid, req.params.id);
+    const body = z.object({ caption: z.string().trim().min(1).max(500) }).parse(req.body);
+    const isAdmin = (process.env.ADMIN_USER_IDS ?? '').split(',').map((x) => x.trim()).includes(req.user!.id);
+    const client = isAdmin ? adminClient() : req.supabase!;
+    const found = await client.from('posts').select('id,user_id').eq('id', id).maybeSingle();
+    if (found.error) throw dbFailure(found.error);
+    if (!found.data) throw new AppError('Post tidak ditemukan.', 404, 'NOT_FOUND');
+    if (found.data.user_id !== req.user!.id && !isAdmin) throw new AppError('Tidak diizinkan mengedit post ini.', 403, 'FORBIDDEN');
+    const { data, error } = await client.from('posts').update({ caption: body.caption }).eq('id', id).select('id,caption').single();
+    if (error) throw dbFailure(error);
+    sendData(req, res, data);
+  } catch (e) { next(e); }
+});
+
 router.delete('/posts/:id', requireAuth, async (req, res, next) => {
   try {
     const id = parse(uuid, req.params.id); const isAdmin = (process.env.ADMIN_USER_IDS ?? '').split(',').map((x) => x.trim()).includes(req.user!.id); const client = isAdmin ? adminClient() : req.supabase!; const found = await client.from('posts').select('id,user_id').eq('id', id).maybeSingle();

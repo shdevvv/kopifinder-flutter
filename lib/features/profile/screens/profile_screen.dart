@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/services/supabase_service.dart';
 import '../../auth/repositories/auth_repository.dart';
 import '../../auth/screens/sign_in_screen.dart';
@@ -22,14 +25,18 @@ class ProfileScreenState extends State<ProfileScreen> {
 
   String userName = '';
   String username = '';
+  String userEmail = '';
+  String? avatarUrl;
   String location = 'Jakarta, Indonesia';
   UserStats _stats = const UserStats();
   // ignore: unused_field
   bool _isLoading = true;
+  bool _isUploadingAvatar = false;
 
   @override
   void initState() {
     super.initState();
+    userEmail = SupabaseService.instance.currentUser?.email ?? '';
     final meta = SupabaseService.instance.currentUser?.userMetadata;
     if (meta != null) {
       userName = (meta['full_name'] ?? meta['name'] ?? '').toString();
@@ -55,6 +62,8 @@ class ProfileScreenState extends State<ProfileScreen> {
         setState(() {
           userName = profile.fullName;
           username = profile.username.startsWith('@') ? profile.username : '@${profile.username}';
+          userEmail = profile.email.isNotEmpty ? profile.email : (SupabaseService.instance.currentUser?.email ?? '');
+          avatarUrl = profile.avatarUrl;
           location = 'Jakarta, Indonesia';
           _stats = stats;
           _isLoading = false;
@@ -64,6 +73,35 @@ class ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    if (_isUploadingAvatar) return;
+    final picker = ImagePicker();
+    final image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (image == null || !mounted) return;
+
+    setState(() => _isUploadingAvatar = true);
+    try {
+      final file = File(image.path);
+      final newUrl = await UserRepository.instance.uploadAvatar(file);
+      if (newUrl != null && mounted) {
+        setState(() {
+          avatarUrl = newUrl;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Foto profil berhasil diperbarui ✓')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Gagal mengupload foto. Coba lagi.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploadingAvatar = false);
     }
   }
 
@@ -299,24 +337,61 @@ class ProfileScreenState extends State<ProfileScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
               // PROFILE PHOTO
-              Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: lightGreen,
-                  border: Border.all(
-                    color: sage,
-                    width: 2,
-                  ),
-                ),
-                child: const CircleAvatar(
-                  radius: 57,
-                  backgroundColor: Color(0xFFDCE4D3),
-                  child: Icon(
-                    Icons.person_rounded,
-                    size: 65,
-                    color: darkGreen,
-                  ),
+              GestureDetector(
+                onTap: _pickAndUploadAvatar,
+                child: Stack(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(7),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: lightGreen,
+                        border: Border.all(
+                          color: sage,
+                          width: 2,
+                        ),
+                      ),
+                      child: CircleAvatar(
+                        radius: 57,
+                        backgroundColor: const Color(0xFFDCE4D3),
+                        backgroundImage: (avatarUrl != null && avatarUrl!.isNotEmpty)
+                            ? NetworkImage(avatarUrl!)
+                            : null,
+                        child: (avatarUrl == null || avatarUrl!.isEmpty)
+                            ? const Icon(
+                                Icons.person_rounded,
+                                size: 65,
+                                color: darkGreen,
+                              )
+                            : null,
+                      ),
+                    ),
+                    if (_isUploadingAvatar)
+                      Positioned.fill(
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black38,
+                          ),
+                          child: const Center(
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          ),
+                        ),
+                      )
+                    else
+                      Positioned(
+                        bottom: 6,
+                        right: 6,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: darkGreen,
+                          ),
+                          child: const Icon(Icons.camera_alt_rounded, size: 16, color: Colors.white),
+                        ),
+                      ),
+                  ],
                 ),
               ),
 
@@ -343,6 +418,18 @@ class ProfileScreenState extends State<ProfileScreen> {
                   color: brown,
                 ),
               ),
+
+              const SizedBox(height: 6),
+
+              // EMAIL
+              if (userEmail.isNotEmpty)
+                Text(
+                  userEmail,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: sage,
+                  ),
+                ),
 
               const SizedBox(height: 10),
 

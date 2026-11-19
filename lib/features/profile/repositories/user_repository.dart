@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/services/supabase_service.dart';
@@ -189,6 +191,35 @@ class UserRepository {
     } catch (_) {}
 
     return const UserStats(reviewsCount: 0, bookmarksCount: 0, postsCount: 0);
+  }
+
+  /// Upload avatar to Supabase Storage and update avatar_url in users table.
+  /// Returns the new public URL, or null on failure.
+  Future<String?> uploadAvatar(File imageFile) async {
+    final currentUser = _supabase.currentUser;
+    if (!_supabase.isInitialized || currentUser == null) return null;
+    try {
+      final client = Supabase.instance.client;
+      final ext = imageFile.path.split('.').last.toLowerCase();
+      final fileName = '${currentUser.id}/avatar.$ext';
+      await client.storage.from('avatars').upload(
+        fileName,
+        imageFile,
+        fileOptions: const FileOptions(upsert: true),
+      );
+      final publicUrl = client.storage.from('avatars').getPublicUrl(fileName);
+      // Add cache-busting timestamp
+      final urlWithTs = '$publicUrl?t=${DateTime.now().millisecondsSinceEpoch}';
+
+      await client.from('users').update({
+        'avatar_url': publicUrl,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', currentUser.id);
+
+      return urlWithTs;
+    } catch (_) {
+      return null;
+    }
   }
 
   UserProfile _defaultProfile() {

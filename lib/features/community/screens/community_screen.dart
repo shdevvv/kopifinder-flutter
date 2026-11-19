@@ -87,7 +87,7 @@ class CommunityScreenState extends State<CommunityScreen> {
   }
 
   Future<void> openCreatePost() async {
-    final result = await showModalBottomSheet<CommunityPost>(
+    final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
@@ -99,9 +99,15 @@ class CommunityScreenState extends State<CommunityScreen> {
 
     if (!mounted || result == null) return;
 
+    final caption = result['caption'] as String? ?? '';
+    final imageFile = result['imageFile'] as File?;
+
+    if (caption.isEmpty && imageFile == null) return;
+
     try {
       final createdPost = await CommunityRepository.instance.createPost(
-        caption: result.caption,
+        caption: caption,
+        imageFile: imageFile,
       );
       if (mounted) {
         setState(() {
@@ -135,7 +141,133 @@ class CommunityScreenState extends State<CommunityScreen> {
     }
   }
 
+  void _showPostOptions(CommunityPost post) {
+    final currentUserId = SupabaseService.instance.currentUser?.id;
+    final isOwner = post.userId != null && post.userId == currentUserId;
+    if (!isOwner) return;
+
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return SafeArea(
+          child: Container(
+            margin: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFAF7F0),
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                Container(
+                  width: 42,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF9AAA83),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ListTile(
+                  leading: const Icon(Icons.edit_rounded, color: Color(0xFF52634A)),
+                  title: const Text('Edit Postingan', style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF4E342E))),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _showEditPostDialog(post);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.delete_rounded, color: Colors.red),
+                  title: const Text('Hapus Postingan', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.red)),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _deletePost(post);
+                  },
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showEditPostDialog(CommunityPost post) async {
+    final captionController = TextEditingController(text: post.caption);
+    final result = await showDialog<String>(
+      context: context,
+      useRootNavigator: true,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFFAF7F0),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          title: const Text('Edit Postingan', style: TextStyle(color: Color(0xFF4E342E), fontWeight: FontWeight.bold)),
+          content: TextField(
+            controller: captionController,
+            maxLines: 4,
+            decoration: InputDecoration(
+              hintText: 'Tulis caption...',
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: const EdgeInsets.all(14),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE4E8DC))),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF52634A))),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text('Batal', style: TextStyle(color: Color(0xFF795548)))),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF52634A), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+              onPressed: () => Navigator.pop(dialogCtx, captionController.text.trim()),
+              child: const Text('Simpan'),
+            ),
+          ],
+        );
+      },
+    );
+    captionController.dispose();
+
+    if (result != null && result.isNotEmpty && post.id != null && mounted) {
+      try {
+        await CommunityRepository.instance.updatePost(post.id!, result);
+        await _loadPosts();
+      } catch (_) {}
+    }
+  }
+
+  Future<void> _deletePost(CommunityPost post) async {
+    if (post.id == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      useRootNavigator: true,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFFAF7F0),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          title: const Text('Hapus Postingan?', style: TextStyle(color: Color(0xFF4E342E), fontWeight: FontWeight.bold)),
+          content: const Text('Postingan akan dihapus permanen.', style: TextStyle(color: Color(0xFF795548))),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('Batal', style: TextStyle(color: Color(0xFF795548)))),
+            TextButton(onPressed: () => Navigator.pop(dialogCtx, true), child: const Text('Hapus', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold))),
+          ],
+        );
+      },
+    );
+    if (confirmed == true && mounted) {
+      try {
+        await CommunityRepository.instance.deletePost(post.id!, photoUrl: post.imageUrl);
+        setState(() => posts.removeWhere((p) => p.id == post.id));
+      } catch (_) {}
+    }
+  }
+
   Widget buildPostCard(CommunityPost post) {
+    final currentUserId = SupabaseService.instance.currentUser?.id;
+    final isOwner = post.userId != null && post.userId == currentUserId;
     return Container(
       margin: const EdgeInsets.only(bottom: 18),
       decoration: BoxDecoration(
@@ -159,15 +291,21 @@ class CommunityScreenState extends State<CommunityScreen> {
             padding: const EdgeInsets.all(15),
             child: Row(
               children: [
+                // Avatar: network image if available, else initials
                 CircleAvatar(
                   backgroundColor: lightGreen,
-                  child: Text(
-                    post.name.isNotEmpty ? post.name[0].toUpperCase() : 'C',
-                    style: const TextStyle(
-                      color: darkGreen,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  backgroundImage: (post.avatarUrl != null && post.avatarUrl!.isNotEmpty)
+                      ? NetworkImage(post.avatarUrl!)
+                      : null,
+                  child: (post.avatarUrl == null || post.avatarUrl!.isEmpty)
+                      ? Text(
+                          post.name.isNotEmpty ? post.name[0].toUpperCase() : 'U',
+                          style: const TextStyle(
+                            color: darkGreen,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      : null,
                 ),
                 const SizedBox(width: 11),
                 Expanded(
@@ -192,14 +330,33 @@ class CommunityScreenState extends State<CommunityScreen> {
                     ],
                   ),
                 ),
-                const Icon(
-                  Icons.more_horiz_rounded,
-                  color: darkBrown,
-                ),
+                // 3-dot menu — only show for own posts
+                if (isOwner)
+                  GestureDetector(
+                    onTap: () => _showPostOptions(post),
+                    child: const Padding(
+                      padding: EdgeInsets.all(6),
+                      child: Icon(Icons.more_horiz_rounded, color: darkBrown),
+                    ),
+                  )
+                else
+                  const SizedBox(width: 32),
               ],
             ),
           ),
-          if (post.image != null)
+          // Post image — network URL first, then local file
+          if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.zero),
+              child: Image.network(
+                post.imageUrl!,
+                width: double.infinity,
+                height: 220,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+            )
+          else if (post.image != null)
             Image.file(
               post.image!,
               width: double.infinity,
@@ -310,10 +467,14 @@ class CommunityScreenState extends State<CommunityScreen> {
                       color: Colors.white.withOpacity(0.8),
                       borderRadius: BorderRadius.circular(18),
                     ),
-                    child: const Icon(
-                      Icons.coffee_rounded,
-                      color: darkGreen,
-                      size: 31,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.asset(
+                        'assets/icons/new_app_icon.png',
+                        width: 55,
+                        height: 55,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 13),
@@ -427,6 +588,7 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
 
   File? selectedImage;
   bool pickingImage = false;
+  bool _isSubmitting = false;
 
   static const cream = Color(0xFFFAF7F0);
   static const sage = Color(0xFF9AAA83);
@@ -471,7 +633,8 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
     }
   }
 
-  void submitPost() {
+  Future<void> submitPost() async {
+    if (_isSubmitting) return;
     final caption = captionController.text.trim();
 
     if (caption.isEmpty && selectedImage == null) {
@@ -485,17 +648,8 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
       return;
     }
 
-    final meta = SupabaseService.instance.currentUser?.userMetadata;
-    final myName = (meta?['full_name'] ?? meta?['name'] ?? meta?['username'] ?? 'User').toString();
-
-    final post = CommunityPost(
-      name: myName,
-      location: 'Jakarta',
-      caption: caption,
-      image: selectedImage,
-    );
-
-    Navigator.pop(context, post);
+    setState(() => _isSubmitting = true);
+    Navigator.pop(context, {'caption': caption, 'imageFile': selectedImage});
   }
 
   @override
@@ -571,14 +725,30 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
                 ),
                 const SizedBox(height: 14),
                 if (selectedImage != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(18),
-                    child: Image.file(
-                      selectedImage!,
-                      height: 180,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: Image.file(
+                          selectedImage!,
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: GestureDetector(
+                          onTap: () => setState(() => selectedImage = null),
+                          child: Container(
+                            decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                            padding: const EdgeInsets.all(4),
+                            child: const Icon(Icons.close, color: Colors.white, size: 18),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 const SizedBox(height: 10),
                 OutlinedButton.icon(
@@ -608,7 +778,7 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: submitPost,
+                    onPressed: _isSubmitting ? null : submitPost,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: darkGreen,
                       foregroundColor: Colors.white,
@@ -619,12 +789,14 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
                         borderRadius: BorderRadius.circular(18),
                       ),
                     ),
-                    child: const Text(
-                      'Bagikan Postingan',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: _isSubmitting
+                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Text(
+                            'Bagikan Postingan',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
               ],

@@ -136,9 +136,7 @@ class CommunityPost {
       author = json['name'].toString();
     }
 
-    if (author.isEmpty) {
-      author = 'Stephanie Halim';
-    }
+    // No fallback dummy name — leave empty if unknown
 
     String loc = 'Jakarta';
     if (json['cafe'] is Map) {
