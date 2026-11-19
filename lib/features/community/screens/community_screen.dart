@@ -20,7 +20,7 @@ class CommunityScreen extends StatefulWidget {
 
 class CommunityScreenState extends State<CommunityScreen> {
   // ── 3D Papercut Palette ───────────────────────────────────────────────────
-  static const Color _bgWall = Color(0xFFA5C943);          // Requested #A5C943 background
+  static const Color _bgWall = Color(0xFFFAF7F0);          // Unified cream background
   static const Color _bgWallShadow = Color(0xFF526B0C);    // Deep olive shelf shadow
   static const Color _cardCream = Color(0xFFF7F2E9);       // Warm cream paper
   static const Color _whitePaper = Color(0xFFFFFFFF);      // Clean white paper

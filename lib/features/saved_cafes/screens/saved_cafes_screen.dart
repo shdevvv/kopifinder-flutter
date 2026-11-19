@@ -12,8 +12,8 @@ class SavedCafesScreen extends StatefulWidget {
 
 class _SavedCafesScreenState extends State<SavedCafesScreen> {
   // ── 3D Papercut Palette: Olive & Cream & Chocolate ──────────────────────────
-  static const Color _bgWall = Color(0xFF526B0C);          // Requested #526B0C deep rich olive
-  static const Color _bgWallShadow = Color(0xFF364807);    // Dark olive shelf shadow
+  static const Color _bgWall = Color(0xFFFAF7F0);          // Unified #FAF7F0 cream background
+  static const Color _bgWallShadow = Color(0xFFD4C1B0);    // Warm paper shelf shadow
   static const Color _cardCream = Color(0xFFF7F2E9);       // Warm cream paper
   static const Color _whitePaper = Color(0xFFFFFFFF);      // Clean white paper
   static const Color _chocolateDark = Color(0xFF382317);   // Dark chocolate text
@@ -94,7 +94,7 @@ class _SavedCafesScreenState extends State<SavedCafesScreen> {
         title: const Text(
           'Saved Cafes',
           style: TextStyle(
-            color: _whitePaper,
+            color: _chocolateDark,
             fontWeight: FontWeight.w900,
             fontSize: 22,
             letterSpacing: 0.2,

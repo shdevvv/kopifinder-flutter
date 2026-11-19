@@ -4,7 +4,7 @@ import '../models/ai_recommendation_models.dart';
 import '../repositories/ai_repository.dart';
 
 // ── 3D Papercut Palette: Warm Cardboard (#CFAC97), Olive/Lime Greens, Cream, Pure White ──
-const Color _bgWall = Color(0xFFCFAC97);         // Requested background wall color
+const Color _bgWall = Color(0xFFFAF7F0);         // Unified cream background
 const Color _cardCream = Color(0xFFF7F2E9);      // Warm cream inner paper
 const Color _whitePaper = Color(0xFFFFFFFF);     // Pure clean white paper
 const Color _chocolateDark = Color(0xFF382317);  // Dark milk chocolate text

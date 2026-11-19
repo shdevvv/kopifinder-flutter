@@ -16,8 +16,8 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   // ── 3D Papercut Palette: Requested #A5C943 Background & Olive/Chocolate Accents ──
-  static const Color _bgWall = Color(0xFFA5C943);          // Requested #A5C943 light lime-olive
-  static const Color _bgWallShadow = Color(0xFF526B0C);    // Deep olive shelf shadow
+  static const Color _bgWall = Color(0xFFFAF7F0);          // Unified #FAF7F0 cream background
+  static const Color _bgWallShadow = Color(0xFFD4C1B0);    // Warm paper shelf shadow
   static const Color _cardCream = Color(0xFFF7F2E9);       // Warm cream paper
   static const Color _whitePaper = Color(0xFFFFFFFF);      // Clean white paper
   static const Color _chocolateDark = Color(0xFF382317);   // Dark chocolate text
