@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/services/supabase_service.dart';
 
@@ -82,11 +84,15 @@ class SavedCafe {
 }
 
 // ==========================================
-// SAVED CAFE STORE & REPOSITORY
+// SAVED CAFE STORE & REPOSITORY (WITH LOCAL SP PERSISTENCE)
 // ==========================================
 
 class SavedCafeStore extends ChangeNotifier {
-  SavedCafeStore._();
+  static const String _spKey = 'kopifinder_saved_cafes_v1';
+
+  SavedCafeStore._() {
+    _loadFromSharedPreferences();
+  }
 
   static final SavedCafeStore instance = SavedCafeStore._();
 
@@ -104,15 +110,48 @@ class SavedCafeStore extends ChangeNotifier {
     );
   }
 
-  /// Call this on logout to clear in-memory cache.
+  /// Load local persistent bookmarks from SharedPreferences
+  Future<void> _loadFromSharedPreferences() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonString = prefs.getString(_spKey);
+      if (jsonString != null && jsonString.isNotEmpty) {
+        final decoded = jsonDecode(jsonString);
+        if (decoded is List) {
+          _savedCafes.clear();
+          for (final item in decoded) {
+            if (item is Map<String, dynamic>) {
+              _savedCafes.add(SavedCafe.fromJson(item));
+            }
+          }
+          notifyListeners();
+        }
+      }
+    } catch (_) {}
+  }
+
+  /// Save current bookmarks to local SharedPreferences
+  Future<void> _saveToSharedPreferences() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonList = _savedCafes.map((c) => c.toJson()).toList();
+      await prefs.setString(_spKey, jsonEncode(jsonList));
+    } catch (_) {}
+  }
+
+  /// Call this on logout to clear in-memory and local cache.
   void clearOnLogout() {
     _savedCafes.clear();
     _isLoading = false;
     _errorMessage = null;
+    _saveToSharedPreferences();
     notifyListeners();
   }
 
   Future<void> fetchSavedCafes() async {
+    // Load local SP items first so bookmarks are available instantly across sessions
+    await _loadFromSharedPreferences();
+
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -127,10 +166,13 @@ class SavedCafeStore extends ChangeNotifier {
             .select('id,cafe_id,saved_at,cafes(id,name,address,photos)')
             .eq('user_id', currentUser.id);
         if (data.isNotEmpty) {
-          _savedCafes.clear();
           for (final item in data) {
-            _savedCafes.add(SavedCafe.fromJson(item));
+            final remoteCafe = SavedCafe.fromJson(item);
+            if (!isSaved(remoteCafe.name)) {
+              _savedCafes.add(remoteCafe);
+            }
           }
+          _saveToSharedPreferences();
           _isLoading = false;
           notifyListeners();
           return;
@@ -141,15 +183,17 @@ class SavedCafeStore extends ChangeNotifier {
     try {
       final response = await ApiClient.instance.get('/saved-cafes');
       if (response is List) {
-        _savedCafes.clear();
         for (final item in response) {
           if (item is Map<String, dynamic>) {
-            _savedCafes.add(SavedCafe.fromJson(item));
+            final remoteCafe = SavedCafe.fromJson(item);
+            if (!isSaved(remoteCafe.name)) {
+              _savedCafes.add(remoteCafe);
+            }
           }
         }
+        _saveToSharedPreferences();
       }
     } catch (e) {
-      // Keep existing memory items on error
       _errorMessage = e.toString();
     } finally {
       _isLoading = false;
@@ -166,6 +210,7 @@ class SavedCafeStore extends ChangeNotifier {
       _savedCafes.removeWhere(
         (item) => item.name.trim().toLowerCase() == cafe.name.trim().toLowerCase(),
       );
+      _saveToSharedPreferences();
       notifyListeners();
 
       if (sb.isInitialized && currentUser != null && cafe.cafeId != null && cafe.cafeId!.isNotEmpty) {
@@ -181,6 +226,7 @@ class SavedCafeStore extends ChangeNotifier {
       } catch (_) {}
     } else {
       _savedCafes.add(cafe);
+      _saveToSharedPreferences();
       notifyListeners();
 
       if (sb.isInitialized && currentUser != null && cafe.cafeId != null && cafe.cafeId!.isNotEmpty) {
@@ -209,6 +255,7 @@ class SavedCafeStore extends ChangeNotifier {
     _savedCafes.removeWhere(
       (cafe) => cafe.name.trim().toLowerCase() == cafeName.trim().toLowerCase(),
     );
+    _saveToSharedPreferences();
     notifyListeners();
 
     final sb = SupabaseService.instance;
