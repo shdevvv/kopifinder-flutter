@@ -23,12 +23,17 @@ class CafeDetailsScreen extends StatefulWidget {
 }
 
 class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
-  static const cream = Color(0xFFFAF7F0);
-  static const lightGreen = Color(0xFFE8EDDF);
-  static const sage = Color(0xFF9AAA83);
-  static const darkGreen = Color(0xFF52634A);
-  static const brown = Color(0xFF795548);
-  static const darkBrown = Color(0xFF4E342E);
+  // ── 3D Papercut Palette ───────────────────────────────────────────────────
+  static const Color _bgCream = Color(0xFFFAF7F2);         // Light airy cream background
+  static const Color _cardCream = Color(0xFFF7F2E9);       // Warm cream paper
+  static const Color _whitePaper = Color(0xFFFFFFFF);      // Clean white paper
+  static const Color _chocolateDark = Color(0xFF382317);   // Dark chocolate text
+  static const Color _chocolateMid = Color(0xFF6B4C38);    // Medium chocolate
+  static const Color _chocolateShadow = Color(0xFFD4C1B0); // Paper shelf shadow
+  static const Color _outlinePaper = Color(0xFFE2D4C5);    // Paper cut edge outline
+  static const Color _greenPrimary = Color(0xFF526B0C);    // Deep olive green
+  static const Color _greenDarkShadow = Color(0xFF364807); // Bottom drop shelf for green
+  static const Color _greenPaperTint = Color(0xFFF0F6E4);  // Soft paper tint
 
   late String _cafeName;
   late String _cafeLocation;
@@ -73,47 +78,63 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
     final photos = _cafeData?.photos ?? [];
 
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: _bgCream,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Cafe Photo Header
+              // ── 3D PAPERCUT CAFE PHOTO HEADER ────────────────────────────
               Stack(
+                clipBehavior: Clip.none,
                 children: [
-                  // SHOW REAL PHOTO if available, else green placeholder
-                  if (photos.isNotEmpty)
-                    ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(30),
-                        bottomRight: Radius.circular(30),
+                  // Photo container with rounded bottom edges & subtle border
+                  Container(
+                    decoration: const BoxDecoration(
+                      color: _cardCream,
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(28),
+                        bottomRight: Radius.circular(28),
                       ),
-                      child: Image.network(
-                        photos[0],
-                        height: 250,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _photoPlaceholder(),
-                      ),
-                    )
-                  else
-                    _photoPlaceholder(),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0x1F382317),
+                          offset: Offset(0, 4),
+                          blurRadius: 10,
+                        ),
+                      ],
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: photos.isNotEmpty
+                        ? Image.network(
+                            photos[0],
+                            height: 250,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => _photoPlaceholder(),
+                          )
+                        : _photoPlaceholder(),
+                  ),
+
+                  // 3D Circular Back Button
                   Positioned(
                     top: 15,
                     left: 15,
-                    child: _circleButton(
+                    child: _build3DCircleButton(
                       icon: Icons.arrow_back_rounded,
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
+
+                  // 3D Circular Bookmark Button
                   Positioned(
                     top: 15,
                     right: 15,
-                    child: _circleButton(
+                    child: _build3DCircleButton(
                       icon: isSaved
                           ? Icons.bookmark_rounded
                           : Icons.bookmark_border_rounded,
+                      iconColor: isSaved ? _greenPrimary : _chocolateDark,
                       onPressed: _toggleBookmark,
                     ),
                   ),
@@ -121,34 +142,35 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
               ),
 
               Padding(
-                padding: const EdgeInsets.all(22),
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       _cafeName,
                       style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: darkBrown,
+                        fontSize: 25,
+                        fontWeight: FontWeight.w900,
+                        color: _chocolateDark,
+                        letterSpacing: -0.3,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
-                        const Icon(Icons.location_on_rounded, color: sage, size: 19),
+                        const Icon(Icons.location_on_rounded, color: _greenPrimary, size: 18),
                         const SizedBox(width: 5),
                         Expanded(
                           child: Text(
                             _cafeLocation,
-                            style: const TextStyle(color: brown, fontSize: 13),
+                            style: const TextStyle(color: _chocolateMid, fontSize: 13, fontWeight: FontWeight.w500),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 20),
 
-                    // RATING + OPENING HOURS side by side
+                    // ── RATING + OPENING HOURS (side by side in 3D paper cards) ──
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -158,8 +180,9 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
                             children: [
                               _sectionTitle('Rating'),
                               const SizedBox(height: 8),
-                              _compactInfoCard(
+                              _build3DInfoCard(
                                 icon: Icons.star_rounded,
+                                iconColor: const Color(0xFFFFB300),
                                 title: '${rating.toStringAsFixed(1)} / 5.0',
                                 subtitle: 'Visitor rating',
                               ),
@@ -173,8 +196,9 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
                             children: [
                               _sectionTitle('Opening Hours'),
                               const SizedBox(height: 8),
-                              _compactInfoCard(
+                              _build3DInfoCard(
                                 icon: Icons.access_time_rounded,
+                                iconColor: _greenPrimary,
                                 title: 'Hours',
                                 subtitle: hours,
                               ),
@@ -186,7 +210,7 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
 
                     const SizedBox(height: 20),
 
-                    // PRICE RANGE + FACILITIES side by side
+                    // ── PRICE RANGE + FACILITIES (side by side in 3D paper cards) ──
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -196,8 +220,9 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
                             children: [
                               _sectionTitle('Price Range'),
                               const SizedBox(height: 8),
-                              _compactInfoCard(
+                              _build3DInfoCard(
                                 icon: Icons.payments_outlined,
+                                iconColor: _greenPrimary,
                                 title: 'Average',
                                 subtitle: price,
                               ),
@@ -224,62 +249,116 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
                       ],
                     ),
 
-                    const SizedBox(height: 25),
+                    const SizedBox(height: 24),
 
-                    // LOCATION: NO GREEN BOX, just address + View on Map button
+                    // ── LOCATION & 3D ACTION BUTTONS ────────────────────────
                     _sectionTitle('Location'),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.location_on_rounded, color: sage, size: 17),
+                        const Icon(Icons.location_on_rounded, color: _greenPrimary, size: 16),
                         const SizedBox(width: 5),
                         Expanded(
                           child: Text(
                             _cafeLocation,
-                            style: const TextStyle(color: brown, fontSize: 13),
+                            style: const TextStyle(color: _chocolateMid, fontSize: 13),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 16),
                     Row(
                       children: [
-                        // View on Map button
+                        // 3D "View on Map" button
                         Expanded(
-                          child: SizedBox(
-                            height: 54,
-                            child: ElevatedButton.icon(
-                              onPressed: () => Navigator.pop(context),
-                              icon: const Icon(Icons.map_outlined),
-                              label: const Text('View on Map'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: darkGreen,
-                                foregroundColor: Colors.white,
-                                elevation: 2,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
+                          child: GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Positioned(
+                                  left: 0,
+                                  right: 0,
+                                  bottom: -3.5,
+                                  child: Container(
+                                    height: 52,
+                                    decoration: BoxDecoration(
+                                      color: _greenDarkShadow,
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                Container(
+                                  height: 52,
+                                  decoration: BoxDecoration(
+                                    color: _greenPrimary,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: const Color(0xFFA5C943), width: 1.5),
+                                  ),
+                                  child: const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.map_outlined, color: Colors.white, size: 19),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'View on Map',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        // Route via Google Maps button
+                        const SizedBox(width: 12),
+                        // 3D "Directions" button (English!)
                         Expanded(
-                          child: SizedBox(
-                            height: 54,
-                            child: ElevatedButton.icon(
-                              onPressed: () => _openGoogleMapsRoute(),
-                              icon: const Icon(Icons.directions_rounded),
-                              label: const Text('Rute'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF4285F4),
-                                foregroundColor: Colors.white,
-                                elevation: 2,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
+                          child: GestureDetector(
+                            onTap: _openGoogleMapsRoute,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Positioned(
+                                  left: 0,
+                                  right: 0,
+                                  bottom: -3.5,
+                                  child: Container(
+                                    height: 52,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF1A5BB8),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                Container(
+                                  height: 52,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF4285F4),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: const Color(0xFF90CAF9), width: 1.5),
+                                  ),
+                                  child: const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.directions_rounded, color: Colors.white, size: 19),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Directions',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -300,20 +379,14 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
     return Container(
       height: 250,
       width: double.infinity,
-      decoration: const BoxDecoration(
-        color: lightGreen,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
-        ),
-      ),
+      color: _cardCream,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset('assets/icon/no_text_logo.png', width: 70, height: 70, fit: BoxFit.contain),
             const SizedBox(height: 10),
-            const Text('Cafe Photos', style: TextStyle(color: darkBrown, fontWeight: FontWeight.w600)),
+            const Text('Cafe Photos', style: TextStyle(color: _chocolateDark, fontWeight: FontWeight.w700)),
           ],
         ),
       ),
@@ -338,9 +411,12 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
       SnackBar(
         content: Text(
           isSaved
-              ? '$_cafeName added to Saved Cafes'
-              : '$_cafeName removed from Saved Cafes',
+              ? 'Saved "${widget.cafeName}" to Saved Cafes!'
+              : 'Removed "${widget.cafeName}" from Saved Cafes',
         ),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -349,7 +425,6 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
     final lat = _cafeData?.latitude;
     final lng = _cafeData?.longitude;
     if (lat == null || lng == null) {
-      // Fallback: search by name
       final encodedName = Uri.encodeComponent(_cafeName);
       final url = Uri.parse(
         'https://www.google.com/maps/search/?api=1&query=$encodedName',
@@ -377,18 +452,40 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
     }
   }
 
-  Widget _circleButton({required IconData icon, required VoidCallback onPressed}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(color: darkBrown.withOpacity(0.08), blurRadius: 8, offset: const Offset(0, 3)),
+  Widget _build3DCircleButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    Color iconColor = _chocolateDark,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: -3,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: const BoxDecoration(
+                color: _chocolateShadow,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: _whitePaper,
+              shape: BoxShape.circle,
+              border: Border.all(color: _outlinePaper, width: 1.5),
+            ),
+            child: Icon(icon, color: iconColor, size: 21),
+          ),
         ],
-      ),
-      child: IconButton(
-        onPressed: onPressed,
-        icon: Icon(icon, color: darkBrown),
       ),
     );
   }
@@ -396,29 +493,58 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
   Widget _sectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: darkBrown),
+      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: _chocolateDark),
     );
   }
 
-  Widget _compactInfoCard({required IconData icon, required String title, required String subtitle}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFEAEDE4)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: darkGreen, size: 20),
-          const SizedBox(height: 6),
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: darkBrown, fontSize: 12)),
-          const SizedBox(height: 3),
-          Text(subtitle, style: const TextStyle(fontSize: 11, color: brown), maxLines: 2, overflow: TextOverflow.ellipsis),
-        ],
-      ),
+  Widget _build3DInfoCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    Color? iconColor,
+  }) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned(
+          left: 2,
+          top: 3,
+          right: -2,
+          bottom: -3,
+          child: Container(
+            decoration: BoxDecoration(
+              color: _chocolateShadow,
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+        ),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: _whitePaper,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _outlinePaper, width: 1.5),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.white,
+                offset: Offset(0, -1),
+                blurRadius: 0,
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: iconColor ?? _greenPrimary, size: 22),
+              const SizedBox(height: 6),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w900, color: _chocolateDark, fontSize: 13)),
+              const SizedBox(height: 3),
+              Text(subtitle, style: const TextStyle(fontSize: 11, color: _chocolateMid, fontWeight: FontWeight.w500), maxLines: 2, overflow: TextOverflow.ellipsis),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -437,18 +563,18 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
 
   Widget _facilityChipSmall(IconData icon, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
-        color: lightGreen,
+        color: _greenPaperTint,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFDCE4D3)),
+        border: Border.all(color: const Color(0xFFA5C943), width: 1.2),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: darkGreen, size: 13),
+          Icon(icon, color: _greenPrimary, size: 13),
           const SizedBox(width: 4),
-          Text(label, style: const TextStyle(color: darkBrown, fontSize: 10, fontWeight: FontWeight.w500)),
+          Text(label, style: const TextStyle(color: _chocolateDark, fontSize: 10.5, fontWeight: FontWeight.w700)),
         ],
       ),
     );

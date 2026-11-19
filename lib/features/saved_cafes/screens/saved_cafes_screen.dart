@@ -11,12 +11,16 @@ class SavedCafesScreen extends StatefulWidget {
 }
 
 class _SavedCafesScreenState extends State<SavedCafesScreen> {
-  static const cream = Color(0xFFFAF7F0);
-  static const lightGreen = Color(0xFFE8EDDF);
-  static const sage = Color(0xFF9AAA83);
-  static const darkGreen = Color(0xFF52634A);
-  static const brown = Color(0xFF795548);
-  static const darkBrown = Color(0xFF4E342E);
+  // ── 3D Papercut Palette: Olive & Cream & Chocolate ──────────────────────────
+  static const Color _bgWall = Color(0xFF526B0C);          // Requested #526B0C deep rich olive
+  static const Color _bgWallShadow = Color(0xFF364807);    // Dark olive shelf shadow
+  static const Color _cardCream = Color(0xFFF7F2E9);       // Warm cream paper
+  static const Color _whitePaper = Color(0xFFFFFFFF);      // Clean white paper
+  static const Color _chocolateDark = Color(0xFF382317);   // Dark chocolate text
+  static const Color _chocolateMid = Color(0xFF6B4C38);    // Medium chocolate
+  static const Color _chocolateShadow = Color(0xFFAD8C78); // Paper shelf shadow
+  static const Color _greenVibrant = Color(0xFF8DBA20);    // Vibrant olive lime
+  static const Color _greenLight = Color(0xFFA5C943);      // Light lime olive
 
   @override
   void initState() {
@@ -43,37 +47,76 @@ class _SavedCafesScreenState extends State<SavedCafesScreen> {
     final savedCafes = store.savedCafes;
 
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: _bgWall,
       appBar: AppBar(
-        backgroundColor: cream,
+        backgroundColor: _bgWall,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: darkBrown,
+        centerTitle: false,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: Center(
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: -3,
+                    child: Container(
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: _bgWallShadow,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: _whitePaper,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFFE2D4C5), width: 1.5),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_rounded,
+                      color: _chocolateDark,
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'Saved Cafes',
           style: TextStyle(
-            color: darkBrown,
-            fontWeight: FontWeight.bold,
-            fontSize: 21,
+            color: _whitePaper,
+            fontWeight: FontWeight.w900,
+            fontSize: 22,
+            letterSpacing: 0.2,
           ),
         ),
       ),
       body: RefreshIndicator(
-        color: darkGreen,
-        backgroundColor: cream,
+        color: _greenVibrant,
+        backgroundColor: _whitePaper,
         onRefresh: () => store.fetchSavedCafes(),
         child: store.isLoading && savedCafes.isEmpty
-            ? const AppLoadingWidget(message: 'Memuat kafe tersimpan...')
+            ? const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(40),
+                  child: AppLoadingWidget(message: 'Loading saved cafes...'),
+                ),
+              )
             : savedCafes.isEmpty
                 ? _buildEmptyState()
                 : ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.fromLTRB(18, 14, 18, 24),
                     itemCount: savedCafes.length,
                     itemBuilder: (context, index) {
                       final cafe = savedCafes[index];
@@ -88,49 +131,112 @@ class _SavedCafesScreenState extends State<SavedCafesScreen> {
     return Center(
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(30),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        padding: const EdgeInsets.all(26),
+        child: Stack(
+          clipBehavior: Clip.none,
           children: [
+            // Bottom shelf
+            Positioned(
+              left: 5,
+              top: 6,
+              right: -5,
+              bottom: -6,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: _bgWallShadow,
+                  borderRadius: BorderRadius.circular(26),
+                ),
+              ),
+            ),
+            // Front paper sheet
             Container(
-              width: 125,
-              height: 125,
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 34),
               decoration: BoxDecoration(
-                color: lightGreen,
-                borderRadius: BorderRadius.circular(40),
+                color: _whitePaper,
+                borderRadius: BorderRadius.circular(26),
+                border: Border.all(color: const Color(0xFFE2D4C5), width: 1.8),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.white,
+                    offset: Offset(0, -1),
+                    blurRadius: 0,
+                  ),
+                ],
               ),
-              child: const Icon(
-                Icons.bookmark_border_rounded,
-                size: 65,
-                color: darkGreen,
-              ),
-            ),
-            const SizedBox(height: 22),
-            const Text(
-              'No Saved Cafes Yet',
-              style: TextStyle(
-                fontSize: 21,
-                fontWeight: FontWeight.bold,
-                color: darkBrown,
-              ),
-            ),
-            const SizedBox(height: 9),
-            const Text(
-              'Your favorite cafes will appear here.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: brown,
-                fontSize: 14,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 15),
-            const Text(
-              'Find your cozy coffee spot ☕',
-              style: TextStyle(
-                color: sage,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // 3D Bookmark Circle
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: -4,
+                        child: Container(
+                          width: 88,
+                          height: 88,
+                          decoration: const BoxDecoration(
+                            color: _chocolateShadow,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 88,
+                        height: 88,
+                        decoration: BoxDecoration(
+                          color: _cardCream,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: _greenLight, width: 2),
+                        ),
+                        child: const Icon(
+                          Icons.bookmark_border_rounded,
+                          size: 46,
+                          color: _bgWall,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 22),
+                  const Text(
+                    'No Saved Cafes Yet',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: _chocolateDark,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Your favorite spots will be kept safe here. Tap the bookmark icon on any cafe to save it.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: _chocolateMid,
+                      fontSize: 13,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0F6E4),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: _greenLight, width: 1.2),
+                    ),
+                    child: const Text(
+                      'Find your cozy coffee spot ☕',
+                      style: TextStyle(
+                        color: _bgWall,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -143,131 +249,200 @@ class _SavedCafesScreenState extends State<SavedCafesScreen> {
     final photoUrl = cafe.photoUrl;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 15),
-      child: Container(
-        padding: const EdgeInsets.all(11),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: const Color(0xFFEAEDE4),
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // 3D paper bottom shelf
+          Positioned(
+            left: 4,
+            top: 5,
+            right: -4,
+            bottom: -5,
+            child: Container(
+              decoration: BoxDecoration(
+                color: _bgWallShadow,
+                borderRadius: BorderRadius.circular(22),
+              ),
+            ),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: darkBrown.withOpacity(0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
+          // Front white paper card
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: _whitePaper,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: const Color(0xFFE2D4C5), width: 1.8),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.white,
+                  offset: Offset(0, -1),
+                  blurRadius: 0,
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // REAL CAFE PHOTO OR FALLBACK
-            ClipRRect(
-              borderRadius: BorderRadius.circular(18),
-              child: (photoUrl != null && photoUrl.isNotEmpty)
-                  ? Image.network(
-                      photoUrl,
-                      width: 90,
-                      height: 100,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => _placeholderImage(),
-                    )
-                  : _placeholderImage(),
-            ),
+            child: Row(
+              children: [
+                // CAFE PHOTO WITH 3D PAPERCUT BORDER
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE2D4C5), width: 1.5),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(15),
+                    child: (photoUrl != null && photoUrl.isNotEmpty)
+                        ? Image.network(
+                            photoUrl,
+                            width: 86,
+                            height: 86,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => _placeholderImage(),
+                          )
+                        : _placeholderImage(),
+                  ),
+                ),
 
-            const SizedBox(width: 13),
+                const SizedBox(width: 13),
 
-            // CAFE INFORMATION
-            Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CafeDetailsScreen(
-                        cafeId: cafe.cafeId,
-                        cafeName: cafe.name,
-                        cafeLocation: cafe.location,
-                      ),
-                    ),
-                  );
-                },
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      cafe.name,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: darkBrown,
-                      ),
-                    ),
-                    const SizedBox(height: 7),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on_outlined,
-                          size: 14,
-                          color: sage,
-                        ),
-                        const SizedBox(width: 3),
-                        Expanded(
-                          child: Text(
-                            cafe.location,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: brown,
-                            ),
+                // CAFE DETAILS
+                Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CafeDetailsScreen(
+                            cafeId: cafe.cafeId,
+                            cafeName: cafe.name,
+                            cafeLocation: cafe.location,
                           ),
+                        ),
+                      );
+                    },
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          cafe.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            color: _chocolateDark,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.location_on_rounded,
+                              size: 14,
+                              color: _greenVibrant,
+                            ),
+                            const SizedBox(width: 3),
+                            Expanded(
+                              child: Text(
+                                cafe.location,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: _chocolateMid,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF0F6E4),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: _greenLight, width: 1),
+                              ),
+                              child: const Text(
+                                'View details →',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: _bgWall,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'View cafe details',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: darkGreen,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
 
-            // REMOVE BOOKMARK
-            IconButton(
-              onPressed: () {
-                SavedCafeStore.instance.removeCafe(cafe.name);
-              },
-              icon: const Icon(
-                Icons.bookmark_rounded,
-                color: darkGreen,
-                size: 25,
-              ),
-              tooltip: 'Remove from Saved Cafes',
+                const SizedBox(width: 6),
+
+                // 3D REMOVE BOOKMARK BUTTON
+                GestureDetector(
+                  onTap: () {
+                    SavedCafeStore.instance.removeCafe(cafe.name);
+                  },
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: -2,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: const BoxDecoration(
+                            color: _chocolateShadow,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: _cardCream,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFFE2D4C5), width: 1.5),
+                        ),
+                        child: const Icon(
+                          Icons.bookmark_rounded,
+                          color: _bgWall,
+                          size: 22,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _placeholderImage() {
     return Container(
-      width: 90,
-      height: 100,
-      decoration: BoxDecoration(
-        color: lightGreen,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: const Icon(
-        Icons.local_cafe_rounded,
-        size: 37,
-        color: darkGreen,
+      width: 86,
+      height: 86,
+      color: _cardCream,
+      child: const Center(
+        child: Icon(
+          Icons.local_cafe_rounded,
+          size: 32,
+          color: _bgWall,
+        ),
       ),
     );
   }

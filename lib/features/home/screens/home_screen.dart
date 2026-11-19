@@ -299,18 +299,47 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
 
-                    // Saved cafes button
-                    Container(
-                      decoration: BoxDecoration(
-                        color: lightGreen,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: IconButton(
-                        onPressed: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedCafesScreen()));
-                        },
-                        icon: const Icon(Icons.bookmark_border_rounded, color: darkGreen, size: 25),
-                        tooltip: 'Saved Cafes',
+                    // 3D Papercut Saved cafes button
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedCafesScreen()));
+                      },
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: -3,
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFD4C1B0),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                          ),
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFE2D4C5), width: 1.6),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.white,
+                                  offset: Offset(0, -1),
+                                  blurRadius: 0,
+                                ),
+                              ],
+                            ),
+                            child: const Center(
+                              child: Icon(Icons.bookmark_border_rounded, color: Color(0xFF526B0C), size: 24),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -318,40 +347,64 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SizedBox(height: 26),
 
-                // ── SEARCH BAR ────────────────────────────────────────────
-                TextField(
-                  controller: _searchController,
-                  onSubmitted: (_) => _doSearch(),
-                  textInputAction: TextInputAction.search,
-                  decoration: InputDecoration(
-                    hintText: 'Search cafes...',
-                    hintStyle: TextStyle(color: brown.withOpacity(0.55), fontSize: 14),
-                    prefixIcon: const Icon(Icons.search_rounded, color: darkGreen),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear_rounded, color: sage, size: 20),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() {
-                                _isSearchActive = false;
-                                _hasSearched = false;
-                                _searchResults = [];
-                              });
-                            },
-                          )
-                        : null,
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 18),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: const BorderSide(color: Color(0xFFE4E8DC)),
+                // ── 3D PAPERCUT SEARCH BAR ────────────────────────────────
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: -3.5,
+                      child: Container(
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD4C1B0),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: const BorderSide(color: sage, width: 1.5),
+                    Container(
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFE2D4C5), width: 1.8),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.white,
+                            offset: Offset(0, -1),
+                            blurRadius: 0,
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        onSubmitted: (_) => _doSearch(),
+                        textInputAction: TextInputAction.search,
+                        style: const TextStyle(fontSize: 14, color: Color(0xFF382317), fontWeight: FontWeight.w600),
+                        decoration: InputDecoration(
+                          hintText: 'Search cafes...',
+                          hintStyle: TextStyle(color: brown.withOpacity(0.55), fontSize: 14),
+                          prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF526B0C)),
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear_rounded, color: sage, size: 20),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() {
+                                      _isSearchActive = false;
+                                      _hasSearched = false;
+                                      _searchResults = [];
+                                    });
+                                  },
+                                )
+                              : null,
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
 
                 // ── SEARCH RESULTS (shown directly below search bar) ──────
@@ -399,32 +452,65 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SizedBox(height: 20),
 
-                // ── FILTER BUTTONS ────────────────────────────────────────
+                // ── 3D PAPERCUT FILTER BUTTONS ────────────────────────────
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
+                  clipBehavior: Clip.none,
                   child: Row(
                     children: filters.map((filter) {
                       final isSelected = selectedFilter == filter;
                       return Padding(
-                        padding: const EdgeInsets.only(right: 9),
-                        child: ChoiceChip(
-                          label: Text(filter),
-                          selected: isSelected,
-                          showCheckmark: false,
-                          onSelected: (selected) {
-                            setState(() => selectedFilter = selected ? filter : null);
+                        padding: const EdgeInsets.only(right: 10, bottom: 4),
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() => selectedFilter = isSelected ? null : filter);
                             _onFilterChanged();
                           },
-                          selectedColor: darkGreen,
-                          backgroundColor: Colors.white,
-                          labelStyle: TextStyle(
-                            color: isSelected ? Colors.white : darkBrown,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                            side: BorderSide(color: isSelected ? darkGreen : const Color(0xFFDCE4D3)),
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Positioned(
+                                left: 0,
+                                right: 0,
+                                bottom: -3,
+                                child: Container(
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    color: isSelected ? const Color(0xFF364807) : const Color(0xFFD4C1B0),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                height: 38,
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? const Color(0xFF526B0C) : Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: isSelected ? const Color(0xFFA5C943) : const Color(0xFFE2D4C5),
+                                    width: 1.5,
+                                  ),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.white,
+                                      offset: Offset(0, -1),
+                                      blurRadius: 0,
+                                    ),
+                                  ],
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    filter,
+                                    style: TextStyle(
+                                      color: isSelected ? Colors.white : const Color(0xFF382317),
+                                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                      fontSize: 12.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       );
@@ -484,14 +570,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── Cafe Card ──────────────────────────────────────────────────────────
+  // ── 3D Papercut Cafe Card ──────────────────────────────────────────────
   Widget _buildCafeCard(Cafe cafe) {
     final photoUrl = cafe.photos.isNotEmpty ? cafe.photos[0] : null;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+      padding: const EdgeInsets.only(bottom: 15),
+      child: GestureDetector(
         onTap: () {
           Navigator.push(
             context,
@@ -505,71 +590,134 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         },
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFEAEDE4)),
-            boxShadow: [
-              BoxShadow(color: darkBrown.withOpacity(0.04), blurRadius: 9, offset: const Offset(0, 3)),
-            ],
-          ),
-          child: Row(
-            children: [
-              // Cafe photo
-              ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: photoUrl != null
-                    ? Image.network(
-                        photoUrl,
-                        width: 72,
-                        height: 72,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _cafePhotoPlaceholder(),
-                      )
-                    : _cafePhotoPlaceholder(),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      cafe.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: darkBrown),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      cafe.address,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12, color: brown),
-                    ),
-                    const SizedBox(height: 5),
-                    Row(
-                      children: [
-                        const Icon(Icons.star_rounded, color: Color(0xFFFFB300), size: 16),
-                        const SizedBox(width: 3),
-                        Text(
-                          cafe.rating.toStringAsFixed(1),
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: darkBrown),
-                        ),
-                        if (cafe.priceRange != null) ...[
-                          const SizedBox(width: 10),
-                          Text(
-                            cafe.priceRange!,
-                            style: const TextStyle(fontSize: 11, color: sage, fontWeight: FontWeight.w500),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // Bottom paper shadow shelf
+            Positioned(
+              left: 3,
+              top: 4,
+              right: -3,
+              bottom: -4,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD4C1B0),
+                  borderRadius: BorderRadius.circular(20),
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: sage, size: 25),
-            ],
-          ),
+            ),
+            // Front white paper card
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFE2D4C5), width: 1.8),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.white,
+                    offset: Offset(0, -1),
+                    blurRadius: 0,
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  // Cafe photo with 3D papercut border
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: const Color(0xFFE2D4C5), width: 1.4),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: photoUrl != null
+                          ? Image.network(
+                              photoUrl,
+                              width: 74,
+                              height: 74,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => _cafePhotoPlaceholder(),
+                            )
+                          : _cafePhotoPlaceholder(),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          cafe.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 15,
+                            color: Color(0xFF382317),
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          cafe.address,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12, color: Color(0xFF6B4C38)),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            // 3D Rating pill
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFF9E6),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: const Color(0xFFFFD54F), width: 1),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.star_rounded, color: Color(0xFFFFB300), size: 14),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    cafe.rating.toStringAsFixed(1),
+                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF382317)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (cafe.priceRange != null) ...[
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  cafe.priceRange!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 11, color: Color(0xFF526B0C), fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF7F2E9),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFFE2D4C5), width: 1.2),
+                    ),
+                    child: const Icon(Icons.chevron_right_rounded, color: Color(0xFF526B0C), size: 20),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
