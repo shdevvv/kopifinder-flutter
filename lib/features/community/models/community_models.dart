@@ -113,15 +113,21 @@ class CommunityPost {
   }) : comments = comments ?? [];
 
   factory CommunityPost.fromJson(Map<String, dynamic> json) {
-    String author = 'Coffee Explorer';
+    String author = 'Pengguna KopiFinder';
     String? avatar;
     if (json['author'] is Map) {
-      author = json['author']['full_name'] ?? json['author']['username'] ?? author;
-      avatar = json['author']['avatar_url'];
+      author = json['author']['full_name']?.toString() ??
+          json['author']['username']?.toString() ??
+          json['author']['name']?.toString() ??
+          author;
+      avatar = json['author']['avatar_url']?.toString();
     } else if (json['user'] is Map) {
-      author = json['user']['full_name'] ?? json['user']['username'] ?? author;
-      avatar = json['user']['avatar_url'];
-    } else if (json['name'] != null) {
+      author = json['user']['full_name']?.toString() ??
+          json['user']['username']?.toString() ??
+          json['user']['name']?.toString() ??
+          author;
+      avatar = json['user']['avatar_url']?.toString();
+    } else if (json['name'] != null && json['name'].toString().isNotEmpty) {
       author = json['name'].toString();
     }
 

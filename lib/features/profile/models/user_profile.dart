@@ -20,11 +20,15 @@ class UserProfile {
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
+    final email = json['email']?.toString() ?? '';
+    final defaultUsername = email.isNotEmpty ? email.split('@').first : 'user';
+    final defaultName = email.isNotEmpty ? email.split('@').first : 'User';
+
     return UserProfile(
       id: json['id']?.toString() ?? '',
-      email: json['email']?.toString() ?? '',
-      fullName: json['full_name']?.toString() ?? json['name']?.toString() ?? 'Coffee Lover',
-      username: json['username']?.toString() ?? 'coffeelover',
+      email: email,
+      fullName: json['full_name']?.toString() ?? json['name']?.toString() ?? defaultName,
+      username: json['username']?.toString() ?? defaultUsername,
       avatarUrl: json['avatar_url']?.toString(),
       bio: json['bio']?.toString(),
       location: json['location']?.toString() ?? 'Jakarta, Indonesia',

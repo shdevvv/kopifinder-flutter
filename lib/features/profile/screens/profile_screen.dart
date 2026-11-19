@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/services/supabase_service.dart';
 import '../../auth/repositories/auth_repository.dart';
 import '../../auth/screens/sign_in_screen.dart';
 import '../models/user_profile.dart';
@@ -19,8 +20,8 @@ class ProfileScreenState extends State<ProfileScreen> {
   static const brown = Color(0xFF795548);
   static const darkBrown = Color(0xFF4E342E);
 
-  String userName = 'Stephanie';
-  String username = '@stephanieee';
+  String userName = '';
+  String username = '';
   String location = 'Jakarta, Indonesia';
   UserStats _stats = const UserStats();
   // ignore: unused_field
@@ -29,6 +30,12 @@ class ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    final meta = SupabaseService.instance.currentUser?.userMetadata;
+    if (meta != null) {
+      userName = (meta['full_name'] ?? meta['name'] ?? '').toString();
+      final u = meta['username']?.toString() ?? '';
+      username = u.isNotEmpty ? (u.startsWith('@') ? u : '@$u') : '';
+    }
     _loadProfile();
   }
 

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../core/services/supabase_service.dart';
 import '../../../core/widgets/state_widgets.dart';
 import '../models/community_models.dart';
 import '../repositories/community_repository.dart';
@@ -484,8 +485,11 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
       return;
     }
 
+    final meta = SupabaseService.instance.currentUser?.userMetadata;
+    final myName = (meta?['full_name'] ?? meta?['name'] ?? meta?['username'] ?? 'User').toString();
+
     final post = CommunityPost(
-      name: 'Stephanie',
+      name: myName,
       location: 'Jakarta',
       caption: caption,
       image: selectedImage,

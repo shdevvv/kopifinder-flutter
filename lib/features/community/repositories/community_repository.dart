@@ -56,9 +56,11 @@ class CommunityRepository {
           return data.map((p) {
             final uid = p['user_id']?.toString();
             final profile = uid != null ? profiles[uid] : null;
+            final currentMeta = sb.currentUser?.userMetadata;
+            final myName = (currentMeta?['full_name'] ?? currentMeta?['name'] ?? currentMeta?['username'])?.toString();
             final author = profile?['full_name']?.toString() ??
                 profile?['username']?.toString() ??
-                (uid == sb.currentUser?.id ? 'Stephanie' : 'Coffee Explorer');
+                (uid == sb.currentUser?.id ? (myName ?? 'User') : 'Pengguna KopiFinder');
 
             return CommunityPost(
               id: p['id']?.toString(),
@@ -109,7 +111,8 @@ class CommunityRepository {
 
         String authorName = currentUser.userMetadata?['full_name']?.toString() ??
             currentUser.userMetadata?['name']?.toString() ??
-            'Stephanie';
+            currentUser.userMetadata?['username']?.toString() ??
+            'User';
         try {
           final u = await sb.client!.from('users').select('full_name,username').eq('id', currentUser.id).maybeSingle();
           if (u != null && u['full_name'] != null && u['full_name'].toString().isNotEmpty) {
@@ -144,9 +147,10 @@ class CommunityRepository {
       }
     } catch (_) {}
 
+    final meta = currentUser?.userMetadata;
     return CommunityPost(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: 'Stephanie',
+      name: (meta?['full_name'] ?? meta?['name'] ?? meta?['username'] ?? 'User').toString(),
       location: 'Jakarta',
       caption: caption,
       createdAt: DateTime.now(),
@@ -216,7 +220,8 @@ class CommunityRepository {
 
         String authorName = currentUser.userMetadata?['full_name']?.toString() ??
             currentUser.userMetadata?['name']?.toString() ??
-            'Stephanie';
+            currentUser.userMetadata?['username']?.toString() ??
+            'User';
         try {
           final u = await sb.client!.from('users').select('full_name,username').eq('id', currentUser.id).maybeSingle();
           if (u != null && u['full_name'] != null && u['full_name'].toString().isNotEmpty) {
@@ -244,10 +249,11 @@ class CommunityRepository {
     if (response is Map<String, dynamic>) {
       return CommunityComment.fromJson(response);
     }
+    final meta = currentUser?.userMetadata;
     return CommunityComment(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       postId: postId,
-      name: 'Stephanie',
+      name: (meta?['full_name'] ?? meta?['name'] ?? meta?['username'] ?? 'User').toString(),
       text: text,
       createdAt: DateTime.now(),
     );
@@ -266,37 +272,6 @@ class CommunityRepository {
   }
 
   List<CommunityPost> _defaultPosts() {
-    return [
-      CommunityPost(
-        id: 'post-1',
-        name: 'Coffee Explorer',
-        location: 'First Coffee, Senopati',
-        caption: 'Menemukan tempat ngopi yang nyaman untuk kerja hari ini! Wi-Fi kencang dan suasananya tenang banget.',
-        likes: 24,
-        comments: [
-          CommunityComment(
-            id: 'c-1',
-            postId: 'post-1',
-            name: 'Stephanie',
-            text: 'Tempatnya di mana persisnya?',
-            likes: 2,
-            replies: [
-              CommunityReply(
-                id: 'r-1',
-                name: 'Coffee Explorer',
-                text: 'Di Jl. Senopati No. 41, dekat lapangan sepak bola!',
-              ),
-            ],
-          ),
-        ],
-      ),
-      CommunityPost(
-        id: 'post-2',
-        name: 'Daily Coffee',
-        location: 'Daily Brew, Gandaria',
-        caption: 'Weekend paling pas ditemani secangkir latte dan pastry hangat ☕🥐',
-        likes: 18,
-      ),
-    ];
+    return [];
   }
 }
