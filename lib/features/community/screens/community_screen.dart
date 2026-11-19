@@ -173,7 +173,7 @@ class CommunityScreenState extends State<CommunityScreen> {
                 const SizedBox(height: 10),
                 ListTile(
                   leading: const Icon(Icons.edit_rounded, color: Color(0xFF52634A)),
-                  title: const Text('Edit Postingan', style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF4E342E))),
+                  title: const Text('Edit Post', style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF4E342E))),
                   onTap: () {
                     Navigator.pop(ctx);
                     _showEditPostDialog(post);
@@ -181,7 +181,7 @@ class CommunityScreenState extends State<CommunityScreen> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.delete_rounded, color: Colors.red),
-                  title: const Text('Hapus Postingan', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.red)),
+                  title: const Text('Delete Post', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.red)),
                   onTap: () {
                     Navigator.pop(ctx);
                     _deletePost(post);
@@ -205,12 +205,12 @@ class CommunityScreenState extends State<CommunityScreen> {
         return AlertDialog(
           backgroundColor: const Color(0xFFFAF7F0),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-          title: const Text('Edit Postingan', style: TextStyle(color: Color(0xFF4E342E), fontWeight: FontWeight.bold)),
+          title: const Text('Edit Post', style: TextStyle(color: Color(0xFF4E342E), fontWeight: FontWeight.bold)),
           content: TextField(
             controller: captionController,
             maxLines: 4,
             decoration: InputDecoration(
-              hintText: 'Tulis caption...',
+              hintText: 'Write a caption...',
               filled: true,
               fillColor: Colors.white,
               contentPadding: const EdgeInsets.all(14),
@@ -219,11 +219,11 @@ class CommunityScreenState extends State<CommunityScreen> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text('Batal', style: TextStyle(color: Color(0xFF795548)))),
+            TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text('Cancel', style: TextStyle(color: Color(0xFF795548)))),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF52634A), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
               onPressed: () => Navigator.pop(dialogCtx, captionController.text.trim()),
-              child: const Text('Simpan'),
+              child: const Text('Save'),
             ),
           ],
         );
@@ -248,11 +248,11 @@ class CommunityScreenState extends State<CommunityScreen> {
         return AlertDialog(
           backgroundColor: const Color(0xFFFAF7F0),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-          title: const Text('Hapus Postingan?', style: TextStyle(color: Color(0xFF4E342E), fontWeight: FontWeight.bold)),
-          content: const Text('Postingan akan dihapus permanen.', style: TextStyle(color: Color(0xFF795548))),
+          title: const Text('Delete Post?', style: TextStyle(color: Color(0xFF4E342E), fontWeight: FontWeight.bold)),
+          content: const Text('This post will be permanently deleted.', style: TextStyle(color: Color(0xFF795548))),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('Batal', style: TextStyle(color: Color(0xFF795548)))),
-            TextButton(onPressed: () => Navigator.pop(dialogCtx, true), child: const Text('Hapus', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold))),
+            TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('Cancel', style: TextStyle(color: Color(0xFF795548)))),
+            TextButton(onPressed: () => Navigator.pop(dialogCtx, true), child: const Text('Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold))),
           ],
         );
       },
@@ -403,7 +403,7 @@ class CommunityScreenState extends State<CommunityScreen> {
                   ),
                 ),
                 Text(
-                  '${post.comments.length} komentar',
+                  '${post.comments.length} comments',
                   style: const TextStyle(
                     color: darkBrown,
                     fontSize: 12,
@@ -492,7 +492,7 @@ class CommunityScreenState extends State<CommunityScreen> {
                         ),
                         SizedBox(height: 5),
                         Text(
-                          'Bagikan cerita dan temukan teman ngopi!',
+                          'Share your stories & find coffee friends!',
                           style: TextStyle(
                             color: darkGreen,
                             fontSize: 12,
@@ -510,7 +510,7 @@ class CommunityScreenState extends State<CommunityScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Postingan Terbaru',
+                  'Recent Posts',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -520,7 +520,7 @@ class CommunityScreenState extends State<CommunityScreen> {
                 TextButton(
                   onPressed: openCreatePost,
                   child: const Text(
-                    'Buat Post',
+                    'Create Post',
                     style: TextStyle(
                       color: darkGreen,
                       fontWeight: FontWeight.bold,
@@ -533,7 +533,7 @@ class CommunityScreenState extends State<CommunityScreen> {
             if (_isLoading)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 40),
-                child: AppLoadingWidget(message: 'Memuat postingan komunitas...'),
+                child: AppLoadingWidget(message: 'Loading community posts...'),
               )
             else if (_errorMessage != null)
               Padding(
@@ -548,8 +548,8 @@ class CommunityScreenState extends State<CommunityScreen> {
                 padding: EdgeInsets.symmetric(vertical: 30),
                 child: AppEmptyWidget(
                   icon: Icons.forum_outlined,
-                  title: 'Belum Ada Postingan',
-                  description: 'Jadilah yang pertama membagikan cerita kopi Anda!',
+                  title: 'No Posts Yet',
+                  description: 'Be the first to share your coffee moments!',
                 ),
               )
             else
@@ -621,7 +621,7 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Gagal memilih foto. Coba lagi.'),
+          content: Text('Failed to select photo. Please try again.'),
         ),
       );
     } finally {
@@ -641,7 +641,7 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Tambahkan tulisan atau foto terlebih dahulu.',
+            'Please add a caption or photo first.',
           ),
         ),
       );
@@ -690,7 +690,7 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  'Buat Postingan ☕',
+                  'Create Post ☕',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -702,7 +702,7 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
                   controller: captionController,
                   maxLines: 4,
                   decoration: InputDecoration(
-                    hintText: 'Ceritakan pengalaman ngopimu...',
+                    hintText: 'Share your coffee experience...',
                     hintStyle: TextStyle(
                       color: brown.withOpacity(0.5),
                     ),
@@ -758,7 +758,7 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
                     color: darkGreen,
                   ),
                   label: Text(
-                    pickingImage ? 'Memilih foto...' : 'Pilih Foto',
+                    pickingImage ? 'Selecting photo...' : 'Select Photo',
                     style: const TextStyle(
                       color: darkGreen,
                     ),
@@ -792,7 +792,7 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
                     child: _isSubmitting
                         ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                         : const Text(
-                            'Bagikan Postingan',
+                            'Share Post',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                             ),
@@ -913,7 +913,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
               ),
               const SizedBox(height: 18),
               const Text(
-                'Komentar 💬',
+                'Comments 💬',
                 style: TextStyle(
                   fontSize: 21,
                   fontWeight: FontWeight.bold,
@@ -925,7 +925,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
                 child: comments.isEmpty
                     ? const Center(
                         child: Text(
-                          'Belum ada komentar. Jadilah yang pertama!',
+                          'No comments yet. Be the first!',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: brown,
@@ -1076,7 +1076,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Membalas ${replyingTo!.name}',
+                        'Replying to ${replyingTo!.name}',
                         style: const TextStyle(
                           color: darkGreen,
                           fontSize: 12,
@@ -1090,7 +1090,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
                         });
                       },
                       child: const Text(
-                        'Batal',
+                        'Cancel',
                         style: TextStyle(color: brown),
                       ),
                     ),
@@ -1103,8 +1103,8 @@ class _CommentsSheetState extends State<CommentsSheet> {
                       controller: commentController,
                       decoration: InputDecoration(
                         hintText: replyingTo == null
-                            ? 'Tulis komentar...'
-                            : 'Tulis balasan...',
+                            ? 'Write a comment...'
+                            : 'Write a reply...',
                         filled: true,
                         fillColor: Colors.white,
                         contentPadding: const EdgeInsets.symmetric(

@@ -91,13 +91,13 @@ class ProfileScreenState extends State<ProfileScreen> {
           avatarUrl = newUrl;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Foto profil berhasil diperbarui ✓')),
+          const SnackBar(content: Text('Profile photo updated successfully ✓')),
         );
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gagal mengupload foto. Coba lagi.')),
+          const SnackBar(content: Text('Failed to upload photo. Please try again.')),
         );
       }
     } finally {
@@ -133,7 +133,7 @@ class ProfileScreenState extends State<ProfileScreen> {
               children: [
                 _buildEditField(
                   controller: nameController,
-                  label: 'Nama lengkap',
+                  label: 'Full Name',
                   icon: Icons.person_outline_rounded,
                 ),
                 const SizedBox(height: 15),
@@ -155,7 +155,7 @@ class ProfileScreenState extends State<ProfileScreen> {
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text(
-                'Batal',
+                'Cancel',
                 style: TextStyle(
                   color: brown,
                   fontWeight: FontWeight.w600,
@@ -179,7 +179,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                   'username': newUsername,
                 });
               },
-              child: const Text('Simpan'),
+              child: const Text('Save'),
             ),
           ],
         );
@@ -268,7 +268,7 @@ class ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           content: const Text(
-            'Apakah kamu yakin ingin keluar dari akun KopiFinder?',
+            'Are you sure you want to log out of KopiFinder?',
             style: TextStyle(
               color: brown,
               height: 1.5,
@@ -278,7 +278,7 @@ class ProfileScreenState extends State<ProfileScreen> {
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
               child: const Text(
-                'Batal',
+                'Cancel',
                 style: TextStyle(color: brown),
               ),
             ),
@@ -470,11 +470,11 @@ class ProfileScreenState extends State<ProfileScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildStatItem('Disimpan', _stats.bookmarksCount),
+                  _buildStatItem('Saved', _stats.bookmarksCount),
                   const SizedBox(width: 45),
                   Container(width: 1, height: 35, color: const Color(0xFFDCE4D3)),
                   const SizedBox(width: 45),
-                  _buildStatItem('Postingan', _stats.postsCount),
+                  _buildStatItem('Posts', _stats.postsCount),
                 ],
               ),
 

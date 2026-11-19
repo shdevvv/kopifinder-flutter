@@ -69,7 +69,7 @@ class AppErrorWidget extends StatelessWidget {
             ),
             const SizedBox(height: 18),
             const Text(
-              'Oops! Terjadi Kendala',
+              'Oops! Something went wrong',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -91,7 +91,7 @@ class AppErrorWidget extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: const Text('Coba Lagi'),
+                label: const Text('Try Again'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.darkGreen,
                   foregroundColor: Colors.white,

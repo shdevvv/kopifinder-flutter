@@ -160,7 +160,7 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
                               _compactInfoCard(
                                 icon: Icons.star_rounded,
                                 title: '${rating.toStringAsFixed(1)} / 5.0',
-                                subtitle: 'Ulasan pengunjung',
+                                subtitle: 'Visitor rating',
                               ),
                             ],
                           ),
@@ -170,11 +170,11 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _sectionTitle('Jam Buka'),
+                              _sectionTitle('Opening Hours'),
                               const SizedBox(height: 8),
                               _compactInfoCard(
                                 icon: Icons.access_time_rounded,
-                                title: 'Operasional',
+                                title: 'Hours',
                                 subtitle: hours,
                               ),
                             ],
@@ -193,11 +193,11 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _sectionTitle('Harga'),
+                              _sectionTitle('Price Range'),
                               const SizedBox(height: 8),
                               _compactInfoCard(
                                 icon: Icons.payments_outlined,
-                                title: 'Kisaran',
+                                title: 'Average',
                                 subtitle: price,
                               ),
                             ],
@@ -208,7 +208,7 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _sectionTitle('Fasilitas'),
+                              _sectionTitle('Facilities'),
                               const SizedBox(height: 8),
                               Wrap(
                                 spacing: 6,
@@ -226,7 +226,7 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
                     const SizedBox(height: 25),
 
                     // LOCATION: NO GREEN BOX, just address + View on Map button
-                    _sectionTitle('Lokasi'),
+                    _sectionTitle('Location'),
                     const SizedBox(height: 10),
                     Row(
                       children: [
@@ -311,8 +311,8 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
       SnackBar(
         content: Text(
           isSaved
-              ? '$_cafeName ditambahkan ke Saved Cafes'
-              : '$_cafeName dihapus dari Saved Cafes',
+              ? '$_cafeName added to Saved Cafes'
+              : '$_cafeName removed from Saved Cafes',
         ),
       ),
     );

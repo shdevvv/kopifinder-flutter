@@ -66,7 +66,7 @@ class _MapScreenState extends State<MapScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Layanan lokasi (GPS) tidak aktif.'),
+            content: Text('Location service (GPS) is disabled.'),
             backgroundColor: Color(0xFFD32F2F),
           ),
         );
@@ -80,7 +80,7 @@ class _MapScreenState extends State<MapScreen> {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Izin akses lokasi ditolak.'),
+              content: Text('Location permission denied.'),
               backgroundColor: Color(0xFFD32F2F),
             ),
           );
@@ -92,7 +92,7 @@ class _MapScreenState extends State<MapScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Izin lokasi ditolak permanen. Buka pengaturan untuk mengaktifkan.'),
+            content: Text('Location permission permanently denied. Enable it in settings.'),
             backgroundColor: Color(0xFFD32F2F),
           ),
         );
@@ -106,7 +106,7 @@ class _MapScreenState extends State<MapScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal mendapatkan lokasi: $e'),
+          content: Text('Failed to get location: $e'),
           backgroundColor: const Color(0xFFD32F2F),
         ),
       );
@@ -224,7 +224,7 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                     );
                   },
-                  child: const Text('Lihat Detail Kafe'),
+                  child: const Text('View Cafe Details'),
                 ),
               ),
             ],
@@ -387,7 +387,7 @@ class _MapScreenState extends State<MapScreen> {
                 foregroundColor: darkGreen,
                 elevation: 3,
                 onPressed: _moveToUserLocation,
-                tooltip: 'Lokasi Saya',
+                tooltip: 'My Location',
                 child: const Icon(Icons.my_location_rounded),
               ),
             ),
