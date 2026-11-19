@@ -24,7 +24,7 @@ class CafeDetailsScreen extends StatefulWidget {
 
 class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
   // ── 3D Papercut Palette ───────────────────────────────────────────────────
-  static const Color _bgCream = Color(0xFFFAF7F2);         // Light airy cream background
+  static const Color _bgCream = Color(0xFFFAF7F0);         // Unified ivory background
   static const Color _cardCream = Color(0xFFF7F2E9);       // Warm cream paper
   static const Color _whitePaper = Color(0xFFFFFFFF);      // Clean white paper
   static const Color _chocolateDark = Color(0xFF382317);   // Dark chocolate text
