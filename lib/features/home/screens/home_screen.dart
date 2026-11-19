@@ -298,7 +298,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   onSubmitted: (_) => _doSearch(),
                   textInputAction: TextInputAction.search,
                   decoration: InputDecoration(
-                    hintText: 'Cari nama kafe...',
+                    hintText: 'Search cafes...',
                     hintStyle: TextStyle(color: brown.withOpacity(0.55), fontSize: 14),
                     prefixIcon: const Icon(Icons.search_rounded, color: darkGreen),
                     suffixIcon: _searchController.text.isNotEmpty
@@ -334,7 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (_isSearchLoading)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 20),
-                      child: AppLoadingWidget(message: 'Mencari kafe...'),
+                      child: AppLoadingWidget(message: 'Searching cafes...'),
                     )
                   else if (!_hasSearched)
                     Padding(
@@ -342,7 +342,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: ElevatedButton.icon(
                         onPressed: _doSearch,
                         icon: const Icon(Icons.search_rounded, size: 18),
-                        label: const Text('Cari'),
+                        label: const Text('Search'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: darkGreen,
                           foregroundColor: Colors.white,
@@ -356,14 +356,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: EdgeInsets.symmetric(vertical: 20),
                       child: AppEmptyWidget(
                         icon: Icons.search_off_rounded,
-                        title: 'Tidak Ditemukan',
-                        description: 'Tidak ada kafe yang cocok dengan pencarian Anda.',
+                        title: 'No Cafes Found',
+                        description: 'No cafes match your search.',
                       ),
                     )
                   else ...[
                     const SizedBox(height: 4),
                     Text(
-                      '${_searchResults.length} hasil untuk "${_searchController.text.trim()}"',
+                      '${_searchResults.length} results for "${_searchController.text.trim()}"',
                       style: const TextStyle(fontSize: 13, color: sage, fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 10),
@@ -416,7 +416,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Expanded(
                         child: Text(
                           selectedFilter != null
-                              ? 'Kafe "$selectedFilter" di $_locationLabel'
+                              ? '"$selectedFilter" Cafes in $_locationLabel'
                               : 'Popular Near You · $_locationLabel',
                           style: const TextStyle(
                             fontSize: 18,
@@ -431,7 +431,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (_isLoading)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 40),
-                      child: AppLoadingWidget(message: 'Memuat daftar kafe...'),
+                      child: AppLoadingWidget(message: 'Loading cafes...'),
                     )
                   else if (_errorMessage != null)
                     Padding(
@@ -443,8 +443,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: EdgeInsets.symmetric(vertical: 30),
                       child: AppEmptyWidget(
                         icon: Icons.search_off_rounded,
-                        title: 'Belum Ada Kafe',
-                        description: 'Belum ada kafe yang terdaftar di area ini.',
+                        title: 'No Cafes Found',
+                        description: 'No cafes found in this area yet.',
                       ),
                     )
                   else
