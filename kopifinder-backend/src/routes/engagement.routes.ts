@@ -17,9 +17,9 @@ router.get('/cafes/:id/reviews', async (req, res, next) => {
     const rows = data ?? []; const userIds = [...new Set(rows.map((x) => x.user_id))];
     // Read only explicitly public profile fields; never expose email or auth metadata.
     const { adminClient } = await import('../middleware/auth');
-    const profiles = userIds.length ? await adminClient().from('users').select('*').in('id', userIds) : { data: [], error: null };
+    const profiles = userIds.length ? await adminClient().from('users').select('id,name,username,avatar_url').in('id', userIds) : { data: [], error: null };
     if (profiles.error) throw dbFailure(profiles.error);
-    const map = new Map((profiles.data ?? []).map((x: any) => [x.id, { ...x, name: x.name ?? x.full_name ?? x.username ?? 'Reviewer' }]));
+    const map = new Map((profiles.data ?? []).map((x) => [x.id, x]));
     sendPage(req, res, rows.map((x) => ({ ...x, reviewer: map.get(x.user_id) ?? null })), page, limit, (count ?? 0) > to + 1);
   } catch (e) { next(e); }
 });
