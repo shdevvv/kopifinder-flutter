@@ -194,13 +194,16 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
   }) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      clipBehavior: Clip.none,
       child: Row(
-        children: options.map((opt) {
+        children: options.asMap().entries.map((entry) {
+          final i = entry.key;
+          final opt = entry.value;
           final label = labelMap?[opt] ?? opt;
           final icon = iconMap?[opt];
           final isSelected = selected == opt;
           return Padding(
-            padding: const EdgeInsets.only(right: 8),
+            padding: EdgeInsets.only(left: i == 0 ? 2 : 0, right: 8, bottom: 4, top: 4),
             child: _paperChip(
               label: label,
               selected: isSelected,
