@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../app/navigation/main_navigation.dart';
 import '../../home/models/cafe.dart';
 import '../../home/repositories/cafe_repository.dart';
 import '../../saved_cafes/models/saved_cafe.dart';
@@ -272,7 +273,23 @@ class _CafeDetailsScreenState extends State<CafeDetailsScreen> {
                         // 3D "View on Map" button
                         Expanded(
                           child: GestureDetector(
-                            onTap: () => Navigator.pop(context),
+                            onTap: () async {
+                              Cafe targetCafe = _cafeData ?? widget.cafe ?? Cafe(
+                                id: _cafeId,
+                                name: _cafeName,
+                                address: _cafeLocation,
+                              );
+
+                              if (targetCafe.latitude == null || targetCafe.longitude == null) {
+                                try {
+                                  final fetched = await CafeRepository.instance.getCafeById(_cafeId);
+                                  targetCafe = fetched;
+                                } catch (_) {}
+                              }
+
+                              if (!mounted) return;
+                              MainNavigation.openMapForCafe(context, targetCafe);
+                            },
                             child: Stack(
                               clipBehavior: Clip.none,
                               children: [

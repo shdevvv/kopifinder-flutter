@@ -94,6 +94,7 @@ class CommunityPost {
   final String? imageUrl;
   int likes;
   bool liked;
+  int commentsCount;
   final List<CommunityComment> comments;
   final DateTime? createdAt;
 
@@ -108,9 +109,11 @@ class CommunityPost {
     this.imageUrl,
     this.likes = 0,
     this.liked = false,
+    int commentsCount = 0,
     List<CommunityComment>? comments,
     this.createdAt,
-  }) : comments = comments ?? [];
+  })  : comments = comments ?? [],
+        commentsCount = commentsCount > 0 ? commentsCount : (comments?.length ?? 0);
 
   factory CommunityPost.fromJson(Map<String, dynamic> json) {
     String author = '';
@@ -136,8 +139,6 @@ class CommunityPost {
       author = json['name'].toString();
     }
 
-    // No fallback dummy name — leave empty if unknown
-
     String loc = 'Jakarta';
     if (json['cafe'] is Map) {
       loc = json['cafe']['name']?.toString() ?? loc;
@@ -159,6 +160,8 @@ class CommunityPost {
       photo = (json['photos'] as List).first.toString();
     }
 
+    final parsedCommentsCount = (json['comments_count'] as num?)?.toInt() ?? comms.length;
+
     return CommunityPost(
       id: json['id']?.toString(),
       userId: json['user_id']?.toString(),
@@ -169,6 +172,7 @@ class CommunityPost {
       imageUrl: photo,
       likes: (json['likes_count'] as num?)?.toInt() ?? (json['likes'] as num?)?.toInt() ?? 0,
       liked: json['is_liked'] == true || json['liked'] == true,
+      commentsCount: parsedCommentsCount,
       comments: comms,
       createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'].toString()) : null,
     );

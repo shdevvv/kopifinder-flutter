@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../features/home/models/cafe.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/map/screens/map_screen.dart';
 import '../../features/ai_recommendation/screens/ai_recommendation_screen.dart';
@@ -9,40 +10,70 @@ import '../../features/profile/screens/profile_screen.dart';
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
 
+  static final GlobalKey<MainNavigationState> navKey = GlobalKey<MainNavigationState>();
+
+  static MainNavigationState? of(BuildContext context) {
+    return navKey.currentState ?? context.findAncestorStateOfType<MainNavigationState>();
+  }
+
+  static void openMapForCafe(BuildContext context, Cafe cafe) {
+    final state = of(context);
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    if (state != null) {
+      state.openMapWithCafe(cafe);
+    }
+  }
+
   @override
-  State<MainNavigation> createState() => _MainNavigationState();
+  State<MainNavigation> createState() => MainNavigationState();
 }
 
-class _MainNavigationState extends State<MainNavigation> {
+class MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
+
+  final GlobalKey<MapScreenState> _mapKey = GlobalKey<MapScreenState>();
   final GlobalKey<CommunityScreenState> _communityKey = GlobalKey<CommunityScreenState>();
   final GlobalKey<ProfileScreenState> _profileKey = GlobalKey<ProfileScreenState>();
 
-  // Membuka halaman Map dari AI Recommendation
+  int get currentIndex => _currentIndex;
+
+  void setTab(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
   void _openMap() {
     setState(() {
       _currentIndex = 1;
     });
   }
 
-  // Semua halaman KopiFinder
-  late final List<Widget> _pages = [
-    const HomeScreen(),
-    const MapScreen(),
-    AiRecommendationScreen(onOpenMap: _openMap),
-    CommunityScreen(key: _communityKey),
-    ProfileScreen(key: _profileKey),
-  ];
+  void openMapWithCafe(Cafe cafe) {
+    setState(() {
+      _currentIndex = 1;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _mapKey.currentState?.focusCafe(cafe);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final pages = [
+      const HomeScreen(),
+      MapScreen(key: _mapKey),
+      AiRecommendationScreen(onOpenMap: _openMap),
+      CommunityScreen(key: _communityKey),
+      ProfileScreen(key: _profileKey),
+    ];
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _pages,
+        children: pages,
       ),
 
-      // Navigasi bagian bawah
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,

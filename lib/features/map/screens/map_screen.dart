@@ -11,10 +11,10 @@ class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
   @override
-  State<MapScreen> createState() => _MapScreenState();
+  State<MapScreen> createState() => MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class MapScreenState extends State<MapScreen> {
   // ── 3D Papercut Palette: Requested #A5C943 Background & Olive/Chocolate Accents ──
   static const Color _bgWall = Color(0xFFFAF7F0);          // Unified #FAF7F0 cream background
   static const Color _bgWallShadow = Color(0xFFD4C1B0);    // Warm paper shelf shadow
@@ -140,6 +140,27 @@ class _MapScreenState extends State<MapScreen> {
       _showSuggestions = false;
     });
     FocusScope.of(context).unfocus();
+  }
+
+  void focusCafe(Cafe cafe) {
+    Cafe? match;
+    try {
+      match = _cafes.firstWhere(
+        (c) => c.id == cafe.id || c.name.toLowerCase().trim() == cafe.name.toLowerCase().trim(),
+      );
+    } catch (_) {}
+
+    final target = match ?? cafe;
+
+    if (target.latitude != null && target.longitude != null) {
+      _mapController.move(LatLng(target.latitude!, target.longitude!), 17.0);
+      Future.delayed(const Duration(milliseconds: 350), () {
+        if (mounted) _showCafePreview(target);
+      });
+    } else {
+      _searchController.text = target.name;
+      _onSearchSubmitted(target.name);
+    }
   }
 
   // ── Open Google Maps for Route ────────────────────────────────────────
@@ -353,25 +374,78 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                     if (cafe.priceRange != null || cafe.openingHours != null) ...[
                       const SizedBox(height: 14),
-                      Row(
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          if (cafe.priceRange != null) ...[
-                            const Icon(Icons.payments_outlined, color: _greenPrimary, size: 15),
-                            const SizedBox(width: 4),
-                            Text(
-                              cafe.priceRange!,
-                              style: const TextStyle(fontSize: 12, color: _chocolateMid, fontWeight: FontWeight.w600),
+                          if (cafe.priceRange != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
+                              decoration: BoxDecoration(
+                                color: _cardCream,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: const Color(0xFFCFAC97), width: 1),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.payments_outlined, color: _greenPrimary, size: 14),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    cafe.priceRange!,
+                                    style: const TextStyle(fontSize: 11.5, color: _chocolateDark, fontWeight: FontWeight.w700),
+                                  ),
+                                ],
+                              ),
                             ),
-                            const SizedBox(width: 16),
-                          ],
-                          if (cafe.openingHours != null) ...[
-                            const Icon(Icons.access_time_rounded, color: _greenPrimary, size: 15),
-                            const SizedBox(width: 4),
-                            Text(
-                              cafe.openingHours!,
-                              style: const TextStyle(fontSize: 12, color: _chocolateMid, fontWeight: FontWeight.w600),
-                            ),
-                          ],
+                          if (cafe.openingHours != null && cafe.openingHours!.isNotEmpty)
+                            Builder(builder: (context) {
+                              String hours = cafe.openingHours!;
+                              if (!hours.startsWith('Mon') &&
+                                  !hours.startsWith('Tue') &&
+                                  !hours.startsWith('Wed') &&
+                                  !hours.startsWith('Thu') &&
+                                  !hours.startsWith('Fri') &&
+                                  !hours.startsWith('Sat') &&
+                                  !hours.startsWith('Sun')) {
+                                hours = 'Mon - Sun $hours';
+                              }
+                              if (!hours.contains('•')) {
+                                hours = hours.replaceFirst(RegExp(r'\s+(\d{2}:\d{2})'), ' • \$1');
+                              }
+
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE8F5E9),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: const Color(0xFF81C784), width: 1),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 6,
+                                      height: 6,
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFF2E7D32),
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      hours,
+                                      style: const TextStyle(
+                                        fontSize: 11.5,
+                                        color: Color(0xFF1B5E20),
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
                         ],
                       ),
                     ],

@@ -24,7 +24,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     final isAuthenticated = AuthRepository.instance.isAuthenticated;
     final targetScreen = isAuthenticated
-        ? const MainNavigation()
+        ? MainNavigation(key: MainNavigation.navKey)
         : const SignInScreen();
 
     Navigator.pushReplacement(

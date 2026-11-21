@@ -29,6 +29,62 @@ class Cafe {
     this.isSaved = false,
   });
 
+  static String? formatOpeningHours(dynamic val) {
+    if (val == null) return null;
+
+    String rawStr = '';
+
+    if (val is Map) {
+      if (val.containsKey('mon_sun')) {
+        rawStr = 'Mon - Sun ${val['mon_sun']}';
+      } else if (val.containsKey('mon_fri')) {
+        rawStr = 'Mon - Fri ${val['mon_fri']}';
+      } else if (val.containsKey('raw')) {
+        rawStr = val['raw'].toString();
+      } else if (val.isNotEmpty) {
+        rawStr = val.values.first.toString();
+      }
+    } else {
+      rawStr = val.toString().trim();
+    }
+
+    if (rawStr.isEmpty) return null;
+
+    // Clean JSON / Map string artifacts
+    rawStr = rawStr
+        .replaceAll(RegExp(r'^\{|\}$'), '') // remove leading/trailing { }
+        .replaceAll(RegExp(r'^\"|\"$'), '')
+        .trim();
+
+    // Standardize OSM day abbreviations
+    rawStr = rawStr
+        .replaceAll('Mo-Su', 'Mon - Sun')
+        .replaceAll('Mo-Fr', 'Mon - Fri')
+        .replaceAll('Sa-Su', 'Sat - Sun')
+        .replaceAll('mon_sun', 'Mon - Sun')
+        .replaceAll('mon_fri', 'Mon - Fri')
+        .replaceAll('sat_sun', 'Sat - Sun');
+
+    // Remove keys like "raw:"
+    rawStr = rawStr.replaceAll('raw:', '').trim();
+
+    // Standardize time range dashes (e.g. 08:00-22:00 -> 08:00 - 22:00)
+    rawStr = rawStr.replaceAllMapped(
+      RegExp(r'(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})'),
+      (match) => '${match.group(1)} - ${match.group(2)}',
+    );
+
+    // Clean remaining braces
+    rawStr = rawStr.replaceAll('{', '').replaceAll('}', '').trim();
+
+    // If string is missing day names (e.g. "08:00 - 22:00"), prepend "Mon - Sun"
+    if (RegExp(r'^\d{2}:\d{2}\s*-\s*\d{2}:\d{2}$').hasMatch(rawStr)) {
+      rawStr = 'Mon - Sun $rawStr';
+    }
+
+    return rawStr;
+  }
+
   factory Cafe.fromJson(Map<String, dynamic> json) {
     List<String> parseStringList(dynamic val) {
       if (val is List) {
@@ -61,7 +117,7 @@ class Cafe {
       rating: parseDouble(json['rating'] ?? json['average_rating']),
       reviewsCount: parseInt(json['reviews_count']),
       photos: parseStringList(json['photos']),
-      openingHours: json['opening_hours']?.toString(),
+      openingHours: formatOpeningHours(json['opening_hours']),
       isSaved: json['is_saved'] == true,
     );
   }

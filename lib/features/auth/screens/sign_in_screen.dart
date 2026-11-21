@@ -49,7 +49,7 @@ class _SignInScreenState extends State<SignInScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => const MainNavigation(),
+          builder: (context) => MainNavigation(key: MainNavigation.navKey),
         ),
       );
     } catch (e) {
